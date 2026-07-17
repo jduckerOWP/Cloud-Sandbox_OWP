@@ -32,6 +32,10 @@ export PREFECT_RESULTS_PERSIST_BY_DEFAULT = "true"
 export PREFECT_TASKS_DEFAULT_PERSIST_RESULT = "true"
 ```
 
+### Stop the prefect server if necessary
+
+`prefect server stop
+
 You can connect to the Prefect UI by using an ssh tunnel and connect
 to the webserver on your machine.
 
