@@ -32,10 +32,6 @@ export PREFECT_RESULTS_PERSIST_BY_DEFAULT = "true"
 export PREFECT_TASKS_DEFAULT_PERSIST_RESULT = "true"
 ```
 
-### Stop the prefect server if necessary
-
-`prefect server stop
-
 You can connect to the Prefect UI by using an ssh tunnel and connect
 to the webserver on your machine.
 
@@ -48,9 +44,18 @@ Example:
 Open a web browser and open the URL:
 `http://localhost:4200/dashboard`
 
+
+
+### Stop the prefect server if necessary
+
+`prefect server stop`
+
+Stopping the prefect server may be required for debugging issues with running cloudflow on new head nodes.
+
+
 There are also useful Prefect CLI tools:
-prefect --help
-prefect flow-runs ls
+- prefect --help
+- prefect flow-runs ls
 
 ## To cancel a currently running flow:
 Use prefect flow-run cancel flowrun-id. The id can be obtained from "prefect 
