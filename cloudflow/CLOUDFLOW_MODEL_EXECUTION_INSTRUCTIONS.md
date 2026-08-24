@@ -32,7 +32,7 @@ aws s3 cp s3://ioos-transfers/your_model_setup ./your_model_setup --recursive
 git clone https://github.com/ioos/Cloud-Sandbox.git
 ```
 
-> **Note:** If you do not have a working Python environment set up for Cloudflow, follow the **Python Miniforge3 Installation** directives on the main [Cloud-Sandbox Repository](https://github.com/ioos/Cloud-Sandbox.git).
+> **Note:** If you do not have a working Python environment set up for Cloudflow, follow the **Python Miniforge3 Installation** directives on the main [Cloud-Sandbox Repository]([https://github.com/ioos/Cloud-Sandbox.git](https://github.com/ioos/Cloud-Sandbox/blob/main/LOCAL_PYTHON_MINIFORGE3_INSTALLATION_CLOUD_SANDBOX_INSTRUCTIONS.md)).
 
 ---
 
