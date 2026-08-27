@@ -49,7 +49,7 @@ cd ..
 git clone https://github.com/ioos/Cloud-Sandbox.git
 cd Cloud-Sandbox/cloudflow
 # ~13 minutes
-time $MAMBA env create -f cloudflow_minforge3_installation.yml -y
+time $MAMBA env create -f cloudflow_miniforge3_installation.yml -y
 echo "Your cloudflow python3 executable is: ${WORKINGDIR}/miniforge3/envs/cloudflow/bin/python3"
 ```
 
