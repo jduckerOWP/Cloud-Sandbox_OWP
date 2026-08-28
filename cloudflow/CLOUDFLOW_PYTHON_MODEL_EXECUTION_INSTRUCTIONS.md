@@ -85,6 +85,8 @@ Edit `../job.configs/MODEL_EXPERIMENTS/python.experiment`:
 * **`EXEC`**: Absolute pathway to the specific Python executable containing required script dependencies. This can be a separate environment from the Cloudflow launch environment[cite: 4].
 * **`SCRIPT`**: Path to your target Python script harbored on the head node's EFS volume.
 
+> **Note:** If you would like to add dynamic arguments to utilize for your Python script, then please refer to [Section 4: Integrating Custom Arguments into Cloudflow](https://github.com/jduckerOWP/Cloud-Sandbox_OWP/blob/main/cloudflow/CLOUDFLOW_PYTHON_MODEL_EXECUTION_INSTRUCTIONS.md#4-integrating-custom-arguments-into-cloudflow) for instructions on integrating those arguments within cloudflow.
+
 #### Step 3: Configure Cluster Infrastructure
 Edit `../cluster.configs/Experiments/python.ioos` (**Note:** `nodeCount` must strictly be `1` for Basic mode):
 ```json
@@ -196,6 +198,8 @@ Edit `../job.configs/MODEL_EXPERIMENTS/python_mpi.experiment`:
 * **`APP`**: Application execution mode (`mpi` for parallel MPI execution).
 * **`EXEC`**: Absolute pathway to the compiled MPI-enabled Python environment (e.g., `ocsmesh`).
 * **`SCRIPT`**: Absolute pathway to the target parallel Python script hosted on EFS.
+
+> **Note:** If you would like to add dynamic arguments to utilize for your Python script, then please refer to [Section 4: Integrating Custom Arguments into Cloudflow](https://github.com/jduckerOWP/Cloud-Sandbox_OWP/blob/main/cloudflow/CLOUDFLOW_PYTHON_MODEL_EXECUTION_INSTRUCTIONS.md#4-integrating-custom-arguments-into-cloudflow) for instructions on integrating those arguments within cloudflow.
 
 Edit `../cluster.configs/Experiments/python.ioos` (Set `nodeCount` to desired scale, e.g., `2`)[cite: 4]:
 ```json
@@ -310,6 +314,8 @@ Use when applying a single function across an iterable dataset across workers.
 * **`ARG1`**: Processing parameter (e.g., target year `2001`).
 * **`ARG2`**: Target output directory path on EFS.
 
+> **Note:** If you would like to add dynamic arguments to utilize for your Python dask script, then please refer to [Section 4: Integrating Custom Arguments into Cloudflow](https://github.com/jduckerOWP/Cloud-Sandbox_OWP/blob/main/cloudflow/CLOUDFLOW_PYTHON_MODEL_EXECUTION_INSTRUCTIONS.md#4-integrating-custom-arguments-into-cloudflow) for instructions on integrating those arguments within cloudflow.
+
 2.  **Configure Cluster Infrastructure**
 Edit `../cluster.configs/Experiments/python.ioos`:
 ```json
@@ -390,6 +396,8 @@ Use when submitting dedicated computations to the Dask cluster.
 * **`SCRIPT`**: Absolute pathway to the dask Python script hosted on EFS. This must be located within the `Cloud-Sandbox/cloudflow/workflows` directory for proper dask implementation on cloudflow.
 * **`ARG1`**: Processing parameter (e.g., target year `2001`).
 * **`ARG2`**: Target output directory path on EFS.
+
+> **Note:** If you would like to add dynamic arguments to utilize for your Python dask script, then please refer to [Section 4: Integrating Custom Arguments into Cloudflow](https://github.com/jduckerOWP/Cloud-Sandbox_OWP/blob/main/cloudflow/CLOUDFLOW_PYTHON_MODEL_EXECUTION_INSTRUCTIONS.md#4-integrating-custom-arguments-into-cloudflow) for instructions on integrating those arguments within cloudflow.
 
 2.  **Configure Cluster Infrastructure**
 Edit `../cluster.configs/Experiments/python.ioos`:
