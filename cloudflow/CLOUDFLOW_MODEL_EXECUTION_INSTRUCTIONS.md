@@ -210,7 +210,7 @@ When launched, the Cloudflow pipeline executes the following stages automaticall
  2026-08-17 18:02:08,459  INFO - AWSCluster.start | Waiting an additional 150 seconds for nodes to fully initialize ...
 18:02:08.459 | INFO    | workflow - Waiting an additional 150 seconds for nodes to fully initialize ...
 ```
-3. **Model Execution:** Enters the target directory (`MODEL_DIR`), executes the binary using MPI over SSH (e.g., `mpiexec -launcher ssh -hosts <IP> -np <CORES> ...`), and tracks runtime.
+3. **Model Execution:** Enters the target directory (`MODEL_DIR`) and executes the binary using MPI over SSH (e.g., `mpiexec -launcher ssh -hosts <IP> -np <CORES> ...`)
 ```bash
 + echo ------------------------
 ------------------------
