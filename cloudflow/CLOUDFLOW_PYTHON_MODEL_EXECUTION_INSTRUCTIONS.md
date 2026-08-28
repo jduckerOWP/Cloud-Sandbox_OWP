@@ -63,7 +63,7 @@ Cloudflow supports three primary Python execution modes on Cloud-Sandbox:
 
 Single-node execution utilizing one EC2 instance for serial execution or node-level concurrency (e.g., `multiprocessing`).
 
-#### Step 1: Bind Python Executable
+#### Step 1: Bind Python Cloudflow Executable
 ```bash
 sed -i 's|#!/usr/bin/env -S python3 -u|#!/usr/bin/env /save/jason.ducker/miniforge3/envs/cloudflow/bin/python|' workflows/workflow_main.py
 ```
@@ -134,7 +134,7 @@ tail -f cloudflow_test.out
 Multi-node parallel Python execution linked via `mpiexec` across host instances.
 
 #### Step 1: Environment Build Script (`mpi4py` + `netCDF4`)
-MPI Python environments must be compiled against Spack HPC modules available on the head node. Below is an example build script to compile and link Intel MPI compilers and netcdf4 libraries to your Python environment:
+MPI Python environments must be compiled against Spack HPC modules available on the head node. Below is an example build script to compile and link Intel MPI compilers and netCDF4 libraries to your Python environment:
 
 ```bash
 #!/bin/bash
@@ -309,8 +309,44 @@ Use when applying a single function across an iterable dataset across workers.
 * **`SCRIPT`**: Absolute pathway to the dask Python script hosted on EFS. This must be located within the `Cloud-Sandbox/cloudflow/workflows` directory for proper dask implementation on cloudflow.
 * **`ARG1`**: Processing parameter (e.g., target year `2001`).
 * **`ARG2`**: Target output directory path on EFS.
+
+2.  **Configure Cluster Infrastructure**
+Edit `../cluster.configs/Experiments/python.ioos`:
+```json
+{
+  "platform"        : "AWS",
+  "region"          : "us-east-2",
+  "nodeType"        : "c5.4xlarge",
+  "nodeCount"       : 2,
+  "vm_retry_delay"  : 300,
+  "vm_max_retries"  : 5,
+  "tags"            : [
+                        { "Key": "Name", "Value": "Python" },
+                        { "Key": "Project", "Value": "Model_Experiment" }
+                      ],
+  "image_id"        : "ami-0cbf4e2a2768a602b",
+  "key_name"        : "rsa_sandbox_key",
+  "sg_ids"          : ["sg-05c044182398b2a27", "sg-0e5148638d9196f69", "sg-06ca6bc5d4b377dad"],
+  "subnet_id"       : "subnet-00075cfbfcbc8f2cf",
+  "placement_group" : "ioos_cloud_sandbox_Terraform_Placement_Group",
+  "table_name"      : "IOOS-Sandbox-Compute-Nodes"
+}
+```
+* **`platform`**: Target cloud provider (`AWS`).
+* **`region`**: AWS region hosting Sandbox resources (`us-east-2`).
+* **`nodeType`**: Requested AWS EC2 instance type (e.g., `c5.4xlarge`).
+* **`nodeCount`**: Number of EC2 compute nodes allocated for dask job.
+* **`vm_retry_delay`**: Delay in seconds between resource allocation queries (`300`).
+* **`vm_max_retries`**: Maximum query retries for AWS resource requests (`5`).
+* **`tags`**: Resource tags assigned for Prefect job ID tracking.
+* **`image_id`**: AMI ID matching the head node and mounted EFS volume (`ami-0cbf4e2a2768a602b`).
+* **`key_name`**: SSH key pair name configured for the AWS account (`rsa_sandbox_key`).
+* **`sg_ids`**: Security group IDs for network traffic control.
+* **`subnet_id`**: AWS account subnet identifier.
+* **`placement_group`**: Target data center placement group.
+* **`table_name`**: AWS DynamoDB table tracking job specifications (`IOOS-Sandbox-Compute-Nodes`).
   
-2. **Task Integration** (`workflows/tasks.py`)
+3. **Task Integration** (`workflows/tasks.py`)
 Modify the code accordingly within the `python_dask_experiment_run` function to conform with your specific Python dask data parallelism implementation. The code block below serves as a guide for proper implementation of the dask data parallelism method on cloudflow:
    ```python
    elif(job.APP == 'dask_data_parallelism_example'):
@@ -355,7 +391,43 @@ Use when submitting dedicated computations to the Dask cluster.
 * **`ARG1`**: Processing parameter (e.g., target year `2001`).
 * **`ARG2`**: Target output directory path on EFS.
 
-2. **Task Integration** (`workflows/tasks.py`):
+2.  **Configure Cluster Infrastructure**
+Edit `../cluster.configs/Experiments/python.ioos`:
+```json
+{
+  "platform"        : "AWS",
+  "region"          : "us-east-2",
+  "nodeType"        : "c5.4xlarge",
+  "nodeCount"       : 2,
+  "vm_retry_delay"  : 300,
+  "vm_max_retries"  : 5,
+  "tags"            : [
+                        { "Key": "Name", "Value": "Python" },
+                        { "Key": "Project", "Value": "Model_Experiment" }
+                      ],
+  "image_id"        : "ami-0cbf4e2a2768a602b",
+  "key_name"        : "rsa_sandbox_key",
+  "sg_ids"          : ["sg-05c044182398b2a27", "sg-0e5148638d9196f69", "sg-06ca6bc5d4b377dad"],
+  "subnet_id"       : "subnet-00075cfbfcbc8f2cf",
+  "placement_group" : "ioos_cloud_sandbox_Terraform_Placement_Group",
+  "table_name"      : "IOOS-Sandbox-Compute-Nodes"
+}
+```
+* **`platform`**: Target cloud provider (`AWS`).
+* **`region`**: AWS region hosting Sandbox resources (`us-east-2`).
+* **`nodeType`**: Requested AWS EC2 instance type (e.g., `c5.4xlarge`).
+* **`nodeCount`**: Number of EC2 compute nodes allocated for dask job.
+* **`vm_retry_delay`**: Delay in seconds between resource allocation queries (`300`).
+* **`vm_max_retries`**: Maximum query retries for AWS resource requests (`5`).
+* **`tags`**: Resource tags assigned for Prefect job ID tracking.
+* **`image_id`**: AMI ID matching the head node and mounted EFS volume (`ami-0cbf4e2a2768a602b`).
+* **`key_name`**: SSH key pair name configured for the AWS account (`rsa_sandbox_key`).
+* **`sg_ids`**: Security group IDs for network traffic control.
+* **`subnet_id`**: AWS account subnet identifier.
+* **`placement_group`**: Target data center placement group.
+* **`table_name`**: AWS DynamoDB table tracking job specifications (`IOOS-Sandbox-Compute-Nodes`).
+  
+3. **Task Integration** (`workflows/tasks.py`):
 Modify the code accordingly within the `python_dask_experiment_run` function to conform with your specific Python dask task parallelism implementation. The code block below serves as a guide for proper implementation of the dask task parallelism method on cloudflow:
    ```python
    elif(job.APP == 'dask_task_parallelism_example'):
