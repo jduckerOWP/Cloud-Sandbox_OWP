@@ -129,6 +129,114 @@ nohup ./workflows/workflow_main.py ../cluster.configs/Experiments/python.ioos ..
 tail -f cloudflow_test.out
 ```
 
+#### Step 5: Execution Lifecycle Overview
+When launched, the Cloudflow pipeline executes the following stages automatically:
+
+1. **Resource Allocation:** Generates a dynamic cluster name (e.g., `PYTHON-ordinary-foxhound`), queries AWS for requested EC2 compute instances, logs telemetry to DynamoDB, and calculates initial cost projections.
+
+```bash
+jobtype: python_experiment
+13:56:30.743 | INFO    | Flow run 'ordinary-foxhound' - Beginning flow run 'ordinary-foxhound' for flow 'experiment-flow'
+13:56:30.752 | INFO    | Flow run 'ordinary-foxhound' - View at http://127.0.0.1:4200/runs/flow-run/7a279cf1-e479-4908-8e10-77f695c04102
+ 2026-08-25 13:56:30,775  INFO - ClusterFactory.cluster | Attempting to make a new cluster : AWS
+13:56:30.775 | INFO    | workflow - Attempting to make a new cluster : AWS
+
+***************************************************************
+Your cluster name: PYTHON-ordinary-foxhound
+***************************************************************
+
+ 2026-08-25 13:56:30,776  INFO - AWSCluster.memorable_tags | Your cluster Name: PYTHON-ordinary-foxhound
+13:56:30.776 | INFO    | workflow - Your cluster Name: PYTHON-ordinary-foxhound
+self.tags: [{'Key': 'Name', 'Value': 'PYTHON-ordinary-foxhound'}, {'Key': 'Project', 'Value': 'Basic_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}]
+ 2026-08-25 13:56:32,226  INFO - AWSCluster.__init__ | nodeCount: 1  PPN: 8
+13:56:32.226 | INFO    | workflow - nodeCount: 1  PPN: 8
+ 2026-08-25 13:56:32,226  INFO - ClusterFactory.cluster | Created new AWS cluster
+13:56:32.226 | INFO    | workflow - Created new AWS cluster
+13:56:32.227 | INFO    | Task run 'cluster_init-13a' - Finished in state Completed()
+in job init
+<cloudflow.job.PYTHON_Experiment.PYTHON_Experiment object at 0x14787826d7f0>
+13:56:32.235 | INFO    | Task run 'job_init-36d' - Finished in state Completed()
+ 2026-08-25 13:56:32,237  INFO - cluster_tasks.cluster_start | Starting 1 instances ...
+13:56:32.237 | INFO    | workflow - Starting 1 instances ...
+ 2026-08-25 13:56:32,238  INFO - cluster_tasks.cluster_start | Waiting for nodes to start ...
+13:56:32.238 | INFO    | workflow - Waiting for nodes to start ...
+
+===============================================================
+  ESTIMATED CLUSTER COST  (on-demand, Linux, no pre-installed SW)
+===============================================================
+  Instance type : c5.4xlarge
+  Region        : us-east-2  (US East (Ohio))
+  Node count    : 1
+  Per-node rate : $0.6800 / hr
+  Cluster cost  : $0.6800 / hr  |  $16.32 / day
+  NOTE: Estimate is for on-demand pricing only.
+        Actual charges depend on run time and AWS billing.
+===============================================================
+
+ 2026-08-25 13:56:32,401  INFO - AWSCluster._estimate_and_print_cost | Cost estimate – 1x c5.4xlarge @ us-east-2: $0.6800/hr  |  $16.32/day
+13:56:32.401 | INFO    | workflow - Cost estimate – 1x c5.4xlarge @ us-east-2: $0.6800/hr  |  $16.32/day
+
+```
+
+2. **Node Initialization:** Waits for requested instances to enter a running state and initializes environment mounts.
+```bash
+ 2026-08-25 13:56:34,610  INFO - AWSCluster.start | AWS resources have been allocated for cloudflow job. Waiting for nodes to enter running state ...
+13:56:34.610 | INFO    | workflow - AWS resources have been allocated for cloudflow job. Waiting for nodes to enter running state ...
+ 2026-08-25 13:56:34,627  INFO - AWSCluster.__put_instance_records | DB_table output for head node based on instance id i-0e61b9c06fb1304cc: {'instance-id': 'i-0e61b9c06fb1304cc', 'name-tag': 'PYTHON-ordinary-foxhound', 'instance-type': 'c5.4xlarge', 'start-time': 1787666194, 'human-time': '2026-08-25 13:56 UTC', 'minutes-max': 120, 'username': 'jason_ducker'}
+13:56:34.627 | INFO    | workflow - DB_table output for head node based on instance id i-0e61b9c06fb1304cc: {'instance-id': 'i-0e61b9c06fb1304cc', 'name-tag': 'PYTHON-ordinary-foxhound', 'instance-type': 'c5.4xlarge', 'start-time': 1787666194, 'human-time': '2026-08-25 13:56 UTC', 'minutes-max': 120, 'username': 'jason_ducker'}
+ 2026-08-25 13:56:45,432  INFO - AWSCluster.start | Waiting an additional 150 seconds for nodes to fully initialize ...
+13:56:45.432 | INFO    | workflow - Waiting an additional 150 seconds for nodes to fully initialize ...
+```
+
+3. **Model Execution:** Enters the target directory (`MODEL_DIR`), checks the Python script for syntax errors before ssh into EC2 instance, then ssh into EC2 instance and executes the specified Python executable and script within the job configuration file. 
+```bash
+instance 1 : running
+{"instance_id": "i-0e61b9c06fb1304cc", "instance_type": "c5.4xlarge", "state": "pending", "host": "10.26.37.132", "tags": [{"Key": "Name", "Value": "PYTHON-ordinary-foxhound"}, {"Key": "Project", "Value": "Basic_Model_Experiment"}, {"Key": "ApprovedSubnet", "Value": "subnet-00075cfbfcbc8f2cf"}], "user": "jason_ducker", "start_time": 1787666355.8087168}
+13:59:15.812 | INFO    | Task run 'cluster_start-a51' - Finished in state Completed()
+runscript: /mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox/cloudflow/workflows/experiment_launcher.sh
+**********************************************************
+Current directory is /save/jason.ducker/Cloud-Sandbox/cloudflow
+```
+
+
+4. **Deprovisioning & Reporting:** Automatically terminates instantiated compute instance upon run completion or failure, releasing resources and reporting actual compute wall-time and final estimated AWS cost.
+```bash
++ '[' 0 -ne 0 ']'
++ echo 'Python script execution has succesfully completed on the cloud!'
+Python script execution has succesfully completed on the cloud!
++ duration=6
++ echo 'Python script execution took 0 minutes and 6 seconds elapsed.'
+Python script execution took 0 minutes and 6 seconds elapsed.
+ 2026-08-25 13:59:21,597  INFO - tasks.experiment_run | PYTHON use case script execution finished successfully
+13:59:21.597 | INFO    | workflow - PYTHON use case script execution finished successfully
+13:59:21.599 | INFO    | Task run 'experiment_run-238' - Finished in state Completed()
+ 2026-08-25 13:59:21,602  INFO - AWSCluster.terminate | Terminating instances: [{'instance_id': 'i-0e61b9c06fb1304cc', 'instance_type': 'c5.4xlarge', 'state': 'pending', 'host': '10.26.37.132', 'tags': [{'Key': 'Name', 'Value': 'PYTHON-ordinary-foxhound'}, {'Key': 'Project', 'Value': 'Basic_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}], 'user': 'jason_ducker', 'start_time': 1787666355.8087168}]
+13:59:21.602 | INFO    | workflow - Terminating instances: [{'instance_id': 'i-0e61b9c06fb1304cc', 'instance_type': 'c5.4xlarge', 'state': 'pending', 'host': '10.26.37.132', 'tags': [{'Key': 'Name', 'Value': 'PYTHON-ordinary-foxhound'}, {'Key': 'Project', 'Value': 'Basic_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}], 'user': 'jason_ducker', 'start_time': 1787666355.8087168}]
+timelog: PYTHON-ordinary-foxhound: 1 minutes - 1 x c5.4xlarge
+
+===============================================================
+  ACTUAL CLUSTER COST  (on-demand, Linux, based on real runtime)
+===============================================================
+  Cluster name  : PYTHON-ordinary-foxhound
+  Instance type : c5.4xlarge
+  Node count    : 1
+  Elapsed time  : 1 minutes  (0.017 hrs)
+  Per-node rate : $0.6800 / hr
+  ACTUAL COST   : $0.0113
+  NOTE: On-demand rate only; Reserved/Spot pricing will differ.
+===============================================================
+
+ 2026-08-25 13:59:22,125  INFO - cluster_tasks.cluster_terminate | Responses from terminate: 
+13:59:22.125 | INFO    | workflow - Responses from terminate: 
+[{'CurrentState': {'Code': 32, 'Name': 'shutting-down'},
+  'InstanceId': 'i-0e61b9c06fb1304cc',
+  'PreviousState': {'Code': 16, 'Name': 'running'}}]
+13:59:22.127 | INFO    | Task run 'cluster_terminate-083' - Finished in state Completed()
+13:59:47.772 | INFO    | Flow run 'ordinary-foxhound' - Finished in state Completed()
+
+```
+**You've succesfully completed your basic Python model execution using the IOOS Cloud-Sandbox cloudflow method!**
+
 ---
 
 ### Mode B: MPI-Enabled Python Execution (`mpi4py`)
@@ -244,6 +352,31 @@ module load esmf/8.5.0-intel-2021.9.0-5sphkv4
 nohup ./workflows/workflow_main.py ../cluster.configs/Experiments/python.ioos ../job.configs/MODEL_EXPERIMENTS/python_mpi.experiment > cloudflow_test.out &
 tail -f cloudflow_test.out
 ```
+
+#### Step 5: Execution Lifecycle Overview
+When launched, the Cloudflow pipeline executes the following stages automatically:
+
+1. **Resource Allocation:** Generates a dynamic cluster name (e.g., `PYTHON-independent-cricket`), queries AWS for requested EC2 compute instances, logs telemetry to DynamoDB, and calculates initial cost projections.
+
+```bash
+```
+
+2. **Node Initialization:** Waits for requested instances to enter a running state and initializes environment mounts.
+```bash
+ 
+```
+
+3. **Model Execution:** Enters the target directory (`MODEL_DIR`), checks the Python MPI script for syntax errors before proceeding to executing the script, and then executes the Python script using MPI over SSH (e.g., `mpiexec -launcher ssh -hosts <IP> -np <CORES> ... python $SCRIPT`)
+```bash
+
+```
+
+
+4. **Deprovisioning & Reporting:** Automatically terminates instantiated compute instance upon run completion or failure, releasing resources and reporting actual compute wall-time and final estimated AWS cost.
+```bash
+
+```
+**You've succesfully completed your MPI Python model execution using the IOOS Cloud-Sandbox cloudflow method!**
 
 ---
 
@@ -374,6 +507,166 @@ Modify the code accordingly within the `python_dask_experiment_run` function to 
    tail -f cloudflow_test.out
    ```
 
+5: **Execution Lifecycle Overview**
+When launched, the Cloudflow pipeline executes the following stages automatically:
+
+a. **Resource Allocation:** Generates a dynamic cluster name (e.g., `PYTHON-benevolent-shoebill`), queries AWS for requested EC2 compute instances, logs telemetry to DynamoDB, and calculates initial cost projections.
+
+```bash
+jobtype: python_experiment
+19:00:12.192 | INFO    | Flow run 'benevolent-shoebill' - Beginning flow run 'benevolent-shoebill' for flow 'python-experiment-dask-flow'
+19:00:12.201 | INFO    | Flow run 'benevolent-shoebill' - View at http://127.0.0.1:4200/runs/flow-run/9ba19ff5-cfaf-4ead-bbad-0a644ee751d7
+ 2026-08-28 19:00:12,229  INFO - ClusterFactory.cluster | Attempting to make a new cluster : AWS
+19:00:12.229 | INFO    | workflow - Attempting to make a new cluster : AWS
+
+***************************************************************
+Your cluster name: PYTHON-benevolent-shoebill
+***************************************************************
+
+ 2026-08-28 19:00:12,231  INFO - AWSCluster.memorable_tags | Your cluster Name: PYTHON-benevolent-shoebill
+19:00:12.231 | INFO    | workflow - Your cluster Name: PYTHON-benevolent-shoebill
+self.tags: [{'Key': 'Name', 'Value': 'PYTHON-benevolent-shoebill'}, {'Key': 'Project', 'Value': 'Basic_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}]
+ 2026-08-28 19:00:14,481  INFO - AWSCluster.__init__ | nodeCount: 1  PPN: 8
+19:00:14.481 | INFO    | workflow - nodeCount: 1  PPN: 8
+ 2026-08-28 19:00:14,481  INFO - ClusterFactory.cluster | Created new AWS cluster
+19:00:14.481 | INFO    | workflow - Created new AWS cluster
+19:00:14.483 | INFO    | Task run 'cluster_init-150' - Finished in state Completed()
+in job init
+<cloudflow.job.PYTHON_Experiment.PYTHON_Experiment object at 0x14ac0943d400>
+19:00:14.490 | INFO    | Task run 'job_init-206' - Finished in state Completed()
+ 2026-08-28 19:00:14,493  INFO - cluster_tasks.cluster_start | Starting 1 instances ...
+19:00:14.493 | INFO    | workflow - Starting 1 instances ...
+ 2026-08-28 19:00:14,493  INFO - cluster_tasks.cluster_start | Waiting for nodes to start ...
+19:00:14.493 | INFO    | workflow - Waiting for nodes to start ...
+
+===============================================================
+  ESTIMATED CLUSTER COST  (on-demand, Linux, no pre-installed SW)
+===============================================================
+  Instance type : c5.4xlarge
+  Region        : us-east-2  (US East (Ohio))
+  Node count    : 1
+  Per-node rate : $0.6800 / hr
+  Cluster cost  : $0.6800 / hr  |  $16.32 / day
+  NOTE: Estimate is for on-demand pricing only.
+        Actual charges depend on run time and AWS billing.
+===============================================================
+
+ 2026-08-28 19:00:14,667  INFO - AWSCluster._estimate_and_print_cost | Cost estimate – 1x c5.4xlarge @ us-east-2: $0.6800/hr  |  $16.32/day
+19:00:14.667 | INFO    | workflow - Cost estimate – 1x c5.4xlarge @ us-east-2: $0.6800/hr  |  $16.32/day
+```
+
+b. **Node Initialization:** Waits for requested instances to enter a running state and initializes environment mounts.
+```bash
+ 2026-08-28 19:00:16,896  INFO - AWSCluster.start | AWS resources have been allocated for cloudflow job. Waiting for nodes to enter running state ...
+19:00:16.896 | INFO    | workflow - AWS resources have been allocated for cloudflow job. Waiting for nodes to enter running state ...
+ 2026-08-28 19:00:16,918  INFO - AWSCluster.__put_instance_records | DB_table output for head node based on instance id i-02180321f1bec8414: {'instance-id': 'i-02180321f1bec8414', 'name-tag': 'PYTHON-benevolent-shoebill', 'instance-type': 'c5.4xlarge', 'start-time': 1787943616, 'human-time': '2026-08-28 19:00 UTC', 'minutes-max': 120, 'username': 'jason_ducker'}
+19:00:16.918 | INFO    | workflow - DB_table output for head node based on instance id i-02180321f1bec8414: {'instance-id': 'i-02180321f1bec8414', 'name-tag': 'PYTHON-benevolent-shoebill', 'instance-type': 'c5.4xlarge', 'start-time': 1787943616, 'human-time': '2026-08-28 19:00 UTC', 'minutes-max': 120, 'username': 'jason_ducker'}
+ 2026-08-28 19:00:27,861  INFO - AWSCluster.start | Waiting an additional 150 seconds for nodes to fully initialize ...
+19:00:27.861 | INFO    | workflow - Waiting an additional 150 seconds for nodes to fully initialize ...
+```
+
+c. **Dask Client Connectivity Checks:** Once resources have been allocated, a series of steps spin up the Dask client on a head node port, establish SSH connectivity with the Dask workers on the allocated EC2 instance(s), verify all connectivity is working, and deploy the Dask workers to the client upon script execution. 
+```bash
+instance 1 : running
+{"instance_id": "i-02180321f1bec8414", "instance_type": "c5.4xlarge", "state": "pending", "host": "10.26.37.191", "tags": [{"Key": "Name", "Value": "PYTHON-benevolent-shoebill"}, {"Key": "Project", "Value": "Basic_Model_Experiment"}, {"Key": "ApprovedSubnet", "Value": "subnet-00075cfbfcbc8f2cf"}], "user": "jason_ducker", "start_time": 1787943778.0703945}
+19:02:58.074 | INFO    | Task run 'cluster_start-d37' - Finished in state Completed()
+ 2026-08-28 19:02:58,078  INFO - cluster_tasks.find_available_port | Found available Dask port: 8786
+19:02:58.078 | INFO    | workflow - Found available Dask port: 8786
+ 2026-08-28 19:02:58,079  INFO - cluster_tasks.start_dask | Checking SSH route to workers: ['10.26.37.191']
+19:02:58.079 | INFO    | workflow - Checking SSH route to workers: ['10.26.37.191']
+ 2026-08-28 19:02:58,080  INFO - cluster_tasks.start_dask | Starting Scheduler on Head Node: 10.26.36.77:8786
+19:02:58.080 | INFO    | workflow - Starting Scheduler on Head Node: 10.26.36.77:8786
+ 2026-08-28 19:03:01,085  INFO - cluster_tasks.start_dask | Deployed dask of workers to 10.26.37.191...
+19:03:01.085 | INFO    | workflow - Deployed dask of workers to 10.26.37.191...
+ 2026-08-28 19:03:11,085  INFO - cluster_tasks.start_dask | Verifying cluster connectivity...
+19:03:11.085 | INFO    | workflow - Verifying cluster connectivity...
+ 2026-08-28 19:03:17,179  INFO - cluster_tasks.start_dask | SUCCESS: 8/8 workers registered.
+19:03:17.179 | INFO    | workflow - SUCCESS: 8/8 workers registered.
+19:03:17.182 | INFO    | Task run 'start_dask-052' - Finished in state Completed()
+ 2026-08-28 19:03:17,195  INFO - tasks.python_dask_experiment_run | Cluster resources: dict_keys(['tcp://10.26.37.191:33045', 'tcp://10.26.37.191:33983', 'tcp://10.26.37.191:35043', 'tcp://10.26.37.191:35655', 'tcp://10.26.37.191:36823', 'tcp://10.26.37.191:40057', 'tcp://10.26.37.191:40205', 'tcp://10.26.37.191:45177'])
+19:03:17.195 | INFO    | workflow - Cluster resources: dict_keys(['tcp://10.26.37.191:33045', 'tcp://10.26.37.191:33983', 'tcp://10.26.37.191:35043', 'tcp://10.26.37.191:35655', 'tcp://10.26.37.191:36823', 'tcp://10.26.37.191:40057', 'tcp://10.26.37.191:40205', 'tcp://10.26.37.191:45177'])
+```
+
+d. **Dask Data Parallelism Execution:** Directly submits computational tasks or maps functions across the connected worker pool using the native Prefect/Dask Distributed API. Reports back the logging information from the dask workers at the end of the script, reflecting the logging mechanisms that was used in the Python script.
+```bash
+2026-08-28 19:03:25,698  INFO - tasks.python_dask_experiment_run | output directory is /mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output
+19:03:25.698 | INFO    | workflow - output directory is /mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_000.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_001.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_002.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_003.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_004.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_005.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_006.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_007.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_008.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_009.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_010.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_011.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_012.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_013.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_014.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_015.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_016.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_017.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_018.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_019.csv
+/mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_020.csv
+ 2026-08-28 19:03:28,932  INFO - tasks.python_dask_experiment_run | Fetching logs from AWS workers...
+19:03:28.932 | INFO    | workflow - Fetching logs from AWS workers...
+ 2026-08-28 19:03:28,934  INFO - tasks.python_dask_experiment_run | [tcp://10.26.37.191:33045] 2026-08-28 19:03:27,926 - distributed.worker - INFO - Successfully wrote csv file /mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_011.csv
+19:03:28.934 | INFO    | workflow - [tcp://10.26.37.191:33045] 2026-08-28 19:03:27,926 - distributed.worker - INFO - Successfully wrote csv file /mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_011.csv
+ 2026-08-28 19:03:28,934  INFO - tasks.python_dask_experiment_run | [tcp://10.26.37.191:33045] 2026-08-28 19:03:26,910 - distributed.worker - INFO - Successfully wrote csv file /mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_003.csv
+19:03:28.934 | INFO    | workflow - [tcp://10.26.37.191:33045] 2026-08-28 19:03:26,910 - distributed.worker - INFO - Successfully wrote csv file /mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/result_sensor_003.csv
+ 2026-08-28 19:03:28,935  INFO - tasks.python_dask_experiment_run | [tcp://10.26.37.191:33045] 2026-08-28 19:03:19,077 - distributed.worker - INFO - Starting Worker plugin /mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/workflows/python_examples.py9e024ab7-5513-45c4-a24c-b90a20ac353b
+19:03:28.935 | INFO    | workflow - [tcp://10.26.37.191:33045] 2026-08-28 19:03:19,077 - distributed.worker - INFO - Starting Worker plugin /mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/workflows/python_examples.py9e024ab7-5513-45c4-a24c-b90a20ac353b
+ 2026-08-28 19:03:28,935  INFO - tasks.python_dask_experiment_run | [tcp://10.26.37.191:33045] 2026-08-28 19:03:17,098 - distributed.worker - INFO - -------------------------------------------------
+19:03:28.935 | INFO    | workflow - [tcp://10.26.37.191:33045] 2026-08-28 19:03:17,098 - distributed.worker - INFO - -------------------------------------------------
+ 2026-08-28 19:03:28,935  INFO - tasks.python_dask_experiment_run | [tcp://10.26.37.191:33045] 2026-08-28 19:03:17,098 - distributed.worker - INFO -         Registered to:     tcp://10.26.36.77:8786
+19:03:28.935 | INFO    | workflow - [tcp://10.26.37.191:33045] 2026-08-28 19:03:17,098 - distributed.worker - INFO -         Registered to:     tcp://10.26.36.77:8786
+ 2026-08-28 19:03:28,935  INFO - tasks.python_dask_experiment_run | [tcp://10.26.37.191:33045] 2026-08-28 19:03:17,097 - distributed.worker - INFO - Starting Worker plugin shuffle
+19:03:28.935 | INFO    | workflow - [tcp://10.26.37.191:33045] 2026-08-28 19:03:17,097 - distributed.worker - INFO - Starting Worker plugin shuffle
+ 2026-08-28 19:03:28,936  INFO - tasks.python_dask_experiment_run | [tcp://10.26.37.191:33045] 2026-08-28 19:03:17,055 - distributed.worker - INFO - -------------------------------------------------
+```
+
+e. **Deprovisioning & Reporting:** Automatically terminates instantiated compute instance upon run completion or failure, releasing resources and reporting actual compute wall-time and final estimated AWS cost.
+```bash
+19:03:28.968 | INFO    | Task run 'python_dask_experiment_run-192' - Finished in state Completed()
+ 2026-08-28 19:03:28,971  INFO - cluster_tasks.dask_client_close | Terminating local Dask scheduler...
+19:03:28.971 | INFO    | workflow - Terminating local Dask scheduler...
+ 2026-08-28 19:03:29,285  INFO - cluster_tasks.dask_client_close | Dask scheduler terminated gracefully.
+19:03:29.285 | INFO    | workflow - Dask scheduler terminated gracefully.
+ 2026-08-28 19:03:29,285  INFO - cluster_tasks.dask_client_close | Terminating 1 remote Dask worker SSH processes...
+19:03:29.285 | INFO    | workflow - Terminating 1 remote Dask worker SSH processes...
+ 2026-08-28 19:03:29,287  INFO - cluster_tasks.dask_client_close | Remote worker SSH processes signaled to stop.
+19:03:29.287 | INFO    | workflow - Remote worker SSH processes signaled to stop.
+19:03:29.288 | INFO    | Task run 'dask_client_close-bc2' - Finished in state Completed()
+ 2026-08-28 19:03:29,291  INFO - AWSCluster.terminate | Terminating instances: [{'instance_id': 'i-02180321f1bec8414', 'instance_type': 'c5.4xlarge', 'state': 'pending', 'host': '10.26.37.191', 'tags': [{'Key': 'Name', 'Value': 'PYTHON-benevolent-shoebill'}, {'Key': 'Project', 'Value': 'Basic_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}], 'user': 'jason_ducker', 'start_time': 1787943778.0703945}]
+19:03:29.291 | INFO    | workflow - Terminating instances: [{'instance_id': 'i-02180321f1bec8414', 'instance_type': 'c5.4xlarge', 'state': 'pending', 'host': '10.26.37.191', 'tags': [{'Key': 'Name', 'Value': 'PYTHON-benevolent-shoebill'}, {'Key': 'Project', 'Value': 'Basic_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}], 'user': 'jason_ducker', 'start_time': 1787943778.0703945}]
+timelog: PYTHON-benevolent-shoebill: 1 minutes - 1 x c5.4xlarge
+
+===============================================================
+  ACTUAL CLUSTER COST  (on-demand, Linux, based on real runtime)
+===============================================================
+  Cluster name  : PYTHON-benevolent-shoebill
+  Instance type : c5.4xlarge
+  Node count    : 1
+  Elapsed time  : 1 minutes  (0.017 hrs)
+  Per-node rate : $0.6800 / hr
+  ACTUAL COST   : $0.0113
+  NOTE: On-demand rate only; Reserved/Spot pricing will differ.
+===============================================================
+
+ 2026-08-28 19:03:29,852  INFO - cluster_tasks.cluster_terminate | Responses from terminate: 
+19:03:29.852 | INFO    | workflow - Responses from terminate: 
+[{'CurrentState': {'Code': 32, 'Name': 'shutting-down'},
+  'InstanceId': 'i-02180321f1bec8414',
+  'PreviousState': {'Code': 16, 'Name': 'running'}}]
+19:03:29.854 | INFO    | Task run 'cluster_terminate-25b' - Finished in state Completed()
+19:04:38.226 | INFO    | Flow run 'benevolent-shoebill' - Finished in state Completed()
+```
+**You've succesfully completed your Python dask data parallelism execution using the IOOS Cloud-Sandbox cloudflow method!**
+
 ---
 
 #### Method 2: Task Parallelism (`client.submit`)
@@ -460,6 +753,155 @@ Modify the code accordingly within the `python_dask_experiment_run` function to 
    tail -f cloudflow_test.out
    ```
 
+5: **Execution Lifecycle Overview**
+When launched, the Cloudflow pipeline executes the following stages automatically:
+
+a. **Resource Allocation:** Generates a dynamic cluster name (e.g., `PYTHON-benevolent-shoebill`), queries AWS for requested EC2 compute instances, logs telemetry to DynamoDB, and calculates initial cost projections.
+
+```bash
+jobtype: python_experiment
+20:03:54.112 | INFO    | Flow run 'sparkling-seahorse' - Beginning flow run 'sparkling-seahorse' for flow 'python-experiment-dask-flow'
+20:03:54.139 | INFO    | Flow run 'sparkling-seahorse' - View at http://127.0.0.1:4200/runs/flow-run/58a8725b-384e-44f3-8813-7542bc647b15
+ 2026-08-28 20:03:54,174  INFO - ClusterFactory.cluster | Attempting to make a new cluster : AWS
+20:03:54.174 | INFO    | workflow - Attempting to make a new cluster : AWS
+
+***************************************************************
+Your cluster name: PYTHON-sparkling-seahorse
+***************************************************************
+
+ 2026-08-28 20:03:54,176  INFO - AWSCluster.memorable_tags | Your cluster Name: PYTHON-sparkling-seahorse
+20:03:54.176 | INFO    | workflow - Your cluster Name: PYTHON-sparkling-seahorse
+self.tags: [{'Key': 'Name', 'Value': 'PYTHON-sparkling-seahorse'}, {'Key': 'Project', 'Value': 'Basic_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}]
+ 2026-08-28 20:03:55,929  INFO - AWSCluster.__init__ | nodeCount: 2  PPN: 2
+20:03:55.929 | INFO    | workflow - nodeCount: 2  PPN: 2
+ 2026-08-28 20:03:55,930  INFO - ClusterFactory.cluster | Created new AWS cluster
+20:03:55.930 | INFO    | workflow - Created new AWS cluster
+20:03:55.931 | INFO    | Task run 'cluster_init-53f' - Finished in state Completed()
+in job init
+<cloudflow.job.PYTHON_Experiment.PYTHON_Experiment object at 0x149cf2565d30>
+20:03:55.938 | INFO    | Task run 'job_init-948' - Finished in state Completed()
+ 2026-08-28 20:03:55,940  INFO - cluster_tasks.cluster_start | Starting 2 instances ...
+20:03:55.940 | INFO    | workflow - Starting 2 instances ...
+ 2026-08-28 20:03:55,941  INFO - cluster_tasks.cluster_start | Waiting for nodes to start ...
+20:03:55.941 | INFO    | workflow - Waiting for nodes to start ...
+
+===============================================================
+  ESTIMATED CLUSTER COST  (on-demand, Linux, no pre-installed SW)
+===============================================================
+  Instance type : r7i.xlarge
+  Region        : us-east-2  (US East (Ohio))
+  Node count    : 2
+  Per-node rate : $0.2646 / hr
+  Cluster cost  : $0.5292 / hr  |  $12.70 / day
+  NOTE: Estimate is for on-demand pricing only.
+        Actual charges depend on run time and AWS billing.
+===============================================================
+
+ 2026-08-28 20:03:56,121  INFO - AWSCluster._estimate_and_print_cost | Cost estimate – 2x r7i.xlarge @ us-east-2: $0.5292/hr  |  $12.70/day
+20:03:56.121 | INFO    | workflow - Cost estimate – 2x r7i.xlarge @ us-east-2: $0.5292/hr  |  $12.70/day
+```
+
+b. **Node Initialization:** Waits for requested instances to enter a running state and initializes environment mounts.
+```bash
+2026-08-28 20:03:58,585  INFO - AWSCluster.start | AWS resources have been allocated for cloudflow job. Waiting for nodes to enter running state ...
+20:03:58.585 | INFO    | workflow - AWS resources have been allocated for cloudflow job. Waiting for nodes to enter running state ...
+ 2026-08-28 20:03:58,603  INFO - AWSCluster.__put_instance_records | DB_table output for head node based on instance id i-0023e349461362893: {'instance-id': 'i-0023e349461362893', 'name-tag': 'PYTHON-sparkling-seahorse', 'instance-type': 'r7i.xlarge', 'start-time': 1787947438, 'human-time': '2026-08-28 20:03 UTC', 'minutes-max': 120, 'username': 'jason_ducker'}
+20:03:58.603 | INFO    | workflow - DB_table output for head node based on instance id i-0023e349461362893: {'instance-id': 'i-0023e349461362893', 'name-tag': 'PYTHON-sparkling-seahorse', 'instance-type': 'r7i.xlarge', 'start-time': 1787947438, 'human-time': '2026-08-28 20:03 UTC', 'minutes-max': 120, 'username': 'jason_ducker'}
+ 2026-08-28 20:03:58,604  INFO - AWSCluster.__put_instance_records | DB_table output for head node based on instance id i-062197a9de6c15549: {'instance-id': 'i-062197a9de6c15549', 'name-tag': 'PYTHON-sparkling-seahorse', 'instance-type': 'r7i.xlarge', 'start-time': 1787947438, 'human-time': '2026-08-28 20:03 UTC', 'minutes-max': 120, 'username': 'jason_ducker'}
+20:03:58.604 | INFO    | workflow - DB_table output for head node based on instance id i-062197a9de6c15549: {'instance-id': 'i-062197a9de6c15549', 'name-tag': 'PYTHON-sparkling-seahorse', 'instance-type': 'r7i.xlarge', 'start-time': 1787947438, 'human-time': '2026-08-28 20:03 UTC', 'minutes-max': 120, 'username': 'jason_ducker'}
+ 2026-08-28 20:04:09,689  INFO - AWSCluster.start | Waiting an additional 150 seconds for nodes to fully initialize ...
+20:04:09.689 | INFO    | workflow - Waiting an additional 150 seconds for nodes to fully initialize ...
+```
+
+c. **Dask Client Connectivity Checks:** Once resources have been allocated, a series of steps spin up the Dask client on a head node port, establish SSH connectivity with the Dask workers on the allocated EC2 instance(s), verify all connectivity is working, and deploy the Dask workers to the client upon script execution. 
+```bash
+instance 1 : running
+instance 2 : running
+{"instance_id": "i-0023e349461362893", "instance_type": "r7i.xlarge", "state": "pending", "host": "10.26.37.190", "tags": [{"Key": "Name", "Value": "PYTHON-sparkling-seahorse"}, {"Key": "Project", "Value": "Basic_Model_Experiment"}, {"Key": "ApprovedSubnet", "Value": "subnet-00075cfbfcbc8f2cf"}], "user": "jason_ducker", "start_time": 1787947600.0835288}
+{"instance_id": "i-062197a9de6c15549", "instance_type": "r7i.xlarge", "state": "pending", "host": "10.26.37.127", "tags": [{"Key": "Name", "Value": "PYTHON-sparkling-seahorse"}, {"Key": "Project", "Value": "Basic_Model_Experiment"}, {"Key": "ApprovedSubnet", "Value": "subnet-00075cfbfcbc8f2cf"}], "user": "jason_ducker", "start_time": 1787947600.0835288}
+20:06:40.087 | INFO    | Task run 'cluster_start-f66' - Finished in state Completed()
+ 2026-08-28 20:06:40,092  INFO - cluster_tasks.find_available_port | Found available Dask port: 8786
+20:06:40.092 | INFO    | workflow - Found available Dask port: 8786
+ 2026-08-28 20:06:40,092  INFO - cluster_tasks.start_dask | Checking SSH route to workers: ['10.26.37.190', '10.26.37.127']
+20:06:40.092 | INFO    | workflow - Checking SSH route to workers: ['10.26.37.190', '10.26.37.127']
+ 2026-08-28 20:06:40,095  INFO - cluster_tasks.start_dask | Starting Scheduler on Head Node: 10.26.36.77:8786
+20:06:40.095 | INFO    | workflow - Starting Scheduler on Head Node: 10.26.36.77:8786
+ 2026-08-28 20:06:43,101  INFO - cluster_tasks.start_dask | Deployed dask of workers to 10.26.37.190...
+20:06:43.101 | INFO    | workflow - Deployed dask of workers to 10.26.37.190...
+ 2026-08-28 20:06:53,102  INFO - cluster_tasks.start_dask | Deployed dask of workers to 10.26.37.127...
+20:06:53.102 | INFO    | workflow - Deployed dask of workers to 10.26.37.127...
+ 2026-08-28 20:07:03,103  INFO - cluster_tasks.start_dask | Verifying cluster connectivity...
+20:07:03.103 | INFO    | workflow - Verifying cluster connectivity...
+ 2026-08-28 20:07:03,134  INFO - cluster_tasks.start_dask | SUCCESS: 4/4 workers registered.
+20:07:03.134 | INFO    | workflow - SUCCESS: 4/4 workers registered.
+20:07:03.144 | INFO    | Task run 'start_dask-892' - Finished in state Completed()
+ 2026-08-28 20:07:03,152  INFO - tasks.python_dask_experiment_run | Cluster resources: dict_keys(['tcp://10.26.37.127:38739', 'tcp://10.26.37.127:44251', 'tcp://10.26.37.190:36053', 'tcp://10.26.37.190:36785'])
+20:07:03.152 | INFO    | workflow - Cluster resources: dict_keys(['tcp://10.26.37.127:38739', 'tcp://10.26.37.127:44251', 'tcp://10.26.37.190:36053', 'tcp://10.26.37.190:36785'])
+```
+
+d. **Dask Task Parallelism Execution:** Directly submits computational tasks or maps functions across the connected worker pool using the native Prefect/Dask Distributed API. Reports back the logging information from the dask workers at the end of the script, reflecting the logging mechanisms that was used in the Python script.
+```bash
+2026-08-28 20:07:09,452  INFO - tasks.python_dask_experiment_run | Running Python dask task parallelism example
+20:07:09.452 | INFO    | workflow - Running Python dask task parallelism example
+ 2026-08-28 20:57:19,071  INFO - tasks.python_dask_experiment_run | ✅ Saved AORC masked year 2001 to /mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/aorc_gap_mask_2001.nc
+20:57:19.071 | INFO    | workflow - ✅ Saved AORC masked year 2001 to /mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/dask_output/aorc_gap_mask_2001.nc
+ 2026-08-28 20:57:19,071  INFO - tasks.python_dask_experiment_run | Fetching logs from AWS workers...
+20:57:19.071 | INFO    | workflow - Fetching logs from AWS workers...
+ 2026-08-28 20:57:19,073  INFO - tasks.python_dask_experiment_run | [tcp://10.26.37.127:38739] 2026-08-28 20:07:15,181 - distributed.worker - INFO - Starting computation on dask workers for AORC data
+20:57:19.073 | INFO    | workflow - [tcp://10.26.37.127:38739] 2026-08-28 20:07:15,181 - distributed.worker - INFO - Starting computation on dask workers for AORC data
+ 2026-08-28 20:57:19,074  INFO - tasks.python_dask_experiment_run | [tcp://10.26.37.127:38739] 2026-08-28 20:07:12,138 - distributed.worker - INFO - Loading AORC data for year 2001
+20:57:19.074 | INFO    | workflow - [tcp://10.26.37.127:38739] 2026-08-28 20:07:12,138 - distributed.worker - INFO - Loading AORC data for year 2001
+ 2026-08-28 20:57:19,074  INFO - tasks.python_dask_experiment_run | [tcp://10.26.37.127:38739] 2026-08-28 20:07:04,914 - distributed.worker - INFO - Starting Worker plugin /mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/workflows/python_examples.py4ad2f3d2-11c9-478a-ab4e-bf2f7b650b16
+20:57:19.074 | INFO    | workflow - [tcp://10.26.37.127:38739] 2026-08-28 20:07:04,914 - distributed.worker - INFO - Starting Worker plugin /mnt/efs/fs1/save/jason.ducker/Cloud-Sandbox_OWP/cloudflow/workflows/python_examples.py4ad2f3d2-11c9-478a-ab4e-bf2f7b650b16
+ 2026-08-28 20:57:19,074  INFO - tasks.python_dask_experiment_run | [tcp://10.26.37.127:38739] 2026-08-28 20:07:02,970 - distributed.worker - INFO - -------------------------------------------------
+20:57:19.074 | INFO    | workflow - [tcp://10.26.37.127:38739] 2026-08-28 20:07:02,970 - distributed.worker - INFO - -------------------------------------------------
+ 2026-08-28 20:57:19,075  INFO - tasks.python_dask_experiment_run | [tcp://10.26.37.127:38739] 2026-08-28 20:07:02,970 - distributed.worker - INFO -         Registered to:     tcp://10.26.36.77:8786
+20:57:19.075 | INFO    | workflow - [tcp://10.26.37.127:38739] 2026-08-28 20:07:02,970 - distributed.worker - INFO -         Registered to:     tcp://10.26.36.77:8786
+ 2026-08-28 20:57:19,075  INFO - tasks.python_dask_experiment_run | [tcp://10.26.37.127:38739] 2026-08-28 20:07:02,970 - distributed.worker - INFO - Starting Worker plugin shuffle
+20:57:19.075 | INFO    | workflow - [tcp://10.26.37.127:38739] 2026-08-28 20:07:02,970 - distributed.worker - INFO - Starting Worker plugin shuffle
+ 2026-08-28 20:57:19,075  INFO - tasks.python_dask_experiment_run | [tcp://10.26.37.127:38739] 2026-08-28 20:07:02,937 - distributed.worker - INFO - -------------------------------------------------
+```
+
+e. **Deprovisioning & Reporting:** Automatically terminates instantiated compute instance upon run completion or failure, releasing resources and reporting actual compute wall-time and final estimated AWS cost.
+```bash
+20:57:19.097 | INFO    | Task run 'python_dask_experiment_run-fb5' - Finished in state Completed()
+ 2026-08-28 20:57:19,099  INFO - cluster_tasks.dask_client_close | Terminating local Dask scheduler...
+20:57:19.099 | INFO    | workflow - Terminating local Dask scheduler...
+ 2026-08-28 20:57:19,865  INFO - cluster_tasks.dask_client_close | Dask scheduler terminated gracefully.
+20:57:19.865 | INFO    | workflow - Dask scheduler terminated gracefully.
+ 2026-08-28 20:57:19,865  INFO - cluster_tasks.dask_client_close | Terminating 2 remote Dask worker SSH processes...
+20:57:19.865 | INFO    | workflow - Terminating 2 remote Dask worker SSH processes...
+ 2026-08-28 20:57:19,867  INFO - cluster_tasks.dask_client_close | Remote worker SSH processes signaled to stop.
+20:57:19.867 | INFO    | workflow - Remote worker SSH processes signaled to stop.
+20:57:19.868 | INFO    | Task run 'dask_client_close-1d3' - Finished in state Completed()
+ 2026-08-28 20:57:19,872  INFO - AWSCluster.terminate | Terminating instances: [{'instance_id': 'i-0023e349461362893', 'instance_type': 'r7i.xlarge', 'state': 'pending', 'host': '10.26.37.190', 'tags': [{'Key': 'Name', 'Value': 'PYTHON-sparkling-seahorse'}, {'Key': 'Project', 'Value': 'Basic_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}], 'user': 'jason_ducker', 'start_time': 1787947600.0835288}, {'instance_id': 'i-062197a9de6c15549', 'instance_type': 'r7i.xlarge', 'state': 'pending', 'host': '10.26.37.127', 'tags': [{'Key': 'Name', 'Value': 'PYTHON-sparkling-seahorse'}, {'Key': 'Project', 'Value': 'Basic_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}], 'user': 'jason_ducker', 'start_time': 1787947600.0835288}]
+20:57:19.872 | INFO    | workflow - Terminating instances: [{'instance_id': 'i-0023e349461362893', 'instance_type': 'r7i.xlarge', 'state': 'pending', 'host': '10.26.37.190', 'tags': [{'Key': 'Name', 'Value': 'PYTHON-sparkling-seahorse'}, {'Key': 'Project', 'Value': 'Basic_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}], 'user': 'jason_ducker', 'start_time': 1787947600.0835288}, {'instance_id': 'i-062197a9de6c15549', 'instance_type': 'r7i.xlarge', 'state': 'pending', 'host': '10.26.37.127', 'tags': [{'Key': 'Name', 'Value': 'PYTHON-sparkling-seahorse'}, {'Key': 'Project', 'Value': 'Basic_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}], 'user': 'jason_ducker', 'start_time': 1787947600.0835288}]
+timelog: PYTHON-sparkling-seahorse: 51 minutes - 2 x r7i.xlarge
+
+===============================================================
+  ACTUAL CLUSTER COST  (on-demand, Linux, based on real runtime)
+===============================================================
+  Cluster name  : PYTHON-sparkling-seahorse
+  Instance type : r7i.xlarge
+  Node count    : 2
+  Elapsed time  : 51 minutes  (0.850 hrs)
+  Per-node rate : $0.2646 / hr
+  ACTUAL COST   : $0.4498
+  NOTE: On-demand rate only; Reserved/Spot pricing will differ.
+===============================================================
+
+ 2026-08-28 20:57:20,867  INFO - cluster_tasks.cluster_terminate | Responses from terminate: 
+20:57:20.867 | INFO    | workflow - Responses from terminate: 
+[{'CurrentState': {'Code': 32, 'Name': 'shutting-down'},
+  'InstanceId': 'i-0023e349461362893',
+  'PreviousState': {'Code': 16, 'Name': 'running'}}]
+[{'CurrentState': {'Code': 32, 'Name': 'shutting-down'},
+  'InstanceId': 'i-062197a9de6c15549',
+  'PreviousState': {'Code': 16, 'Name': 'running'}}]
+20:57:20.869 | INFO    | Task run 'cluster_terminate-f5e' - Finished in state Completed()
+20:58:05.514 | INFO    | Flow run 'sparkling-seahorse' - Finished in state Completed()
+```
+**You've succesfully completed your Python dask task parallelism execution using the IOOS Cloud-Sandbox cloudflow method!**
 ---
 
 ## 4. Integrating Custom Arguments into Cloudflow
