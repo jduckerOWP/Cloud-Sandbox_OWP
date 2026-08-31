@@ -507,7 +507,7 @@ Modify the code accordingly within the `python_dask_experiment_run` function to 
    tail -f cloudflow_test.out
    ```
 
-5: **Execution Lifecycle Overview**
+5. **Execution Lifecycle Overview**
 When launched, the Cloudflow pipeline executes the following stages automatically:
 
 a. **Resource Allocation:** Generates a dynamic cluster name (e.g., `PYTHON-benevolent-shoebill`), queries AWS for requested EC2 compute instances, logs telemetry to DynamoDB, and calculates initial cost projections.
@@ -753,7 +753,7 @@ Modify the code accordingly within the `python_dask_experiment_run` function to 
    tail -f cloudflow_test.out
    ```
 
-5: **Execution Lifecycle Overview**
+5. **Execution Lifecycle Overview**
 When launched, the Cloudflow pipeline executes the following stages automatically:
 
 a. **Resource Allocation:** Generates a dynamic cluster name (e.g., `PYTHON-benevolent-shoebill`), queries AWS for requested EC2 compute instances, logs telemetry to DynamoDB, and calculates initial cost projections.
