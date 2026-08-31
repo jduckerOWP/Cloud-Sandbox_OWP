@@ -57,6 +57,12 @@ If no server is detected, start and configure it:
 
 Cloudflow supports three primary Python execution modes on Cloud-Sandbox:
 
+* **[Serial / Basic Mode](https://github.com/jduckerOWP/Cloud-Sandbox_OWP/blob/main/cloudflow/CLOUDFLOW_PYTHON_MODEL_EXECUTION_INSTRUCTIONS.md#mode-a-basic-python-execution-serial--concurrent)**: Single-node serial script execution or node-level concurrency.
+* **[MPI-Enabled Mode (`mpi4py`)](https://github.com/jduckerOWP/Cloud-Sandbox_OWP/blob/main/cloudflow/CLOUDFLOW_PYTHON_MODEL_EXECUTION_INSTRUCTIONS.md#mode-b-mpi-enabled-python-execution-mpi4py)**: Multi-node distributed memory execution using `mpiexec`.
+* **[Dask Distributed Mode](https://github.com/jduckerOWP/Cloud-Sandbox_OWP/blob/main/cloudflow/CLOUDFLOW_PYTHON_MODEL_EXECUTION_INSTRUCTIONS.md#mode-c-dask-distributed-execution)**: Dynamic task/data parallelism across scalable worker clusters.
+  * **[Method 1: Dask Data Parallelism (`client.map`)](https://github.com/jduckerOWP/Cloud-Sandbox_OWP/blob/main/cloudflow/CLOUDFLOW_PYTHON_MODEL_EXECUTION_INSTRUCTIONS.md#method-1-data-parallelism-clientmap)**: Applying a function across iterable datasets across workers.
+  * **[Method 2: Dask Task Parallelism (`client.submit`)](https://github.com/jduckerOWP/Cloud-Sandbox_OWP/blob/main/cloudflow/CLOUDFLOW_PYTHON_MODEL_EXECUTION_INSTRUCTIONS.md#method-2-task-parallelism-clientsubmit)**: Submitting dedicated computations directly to the cluster.
+
 ---
 
 ### Mode A: Basic Python Execution (Serial / Concurrent)
