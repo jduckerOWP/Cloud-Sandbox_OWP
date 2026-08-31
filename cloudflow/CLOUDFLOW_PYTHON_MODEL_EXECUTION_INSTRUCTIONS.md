@@ -129,6 +129,11 @@ Edit `../cluster.configs/Experiments/python.ioos` (**Note:** `nodeCount` must st
 * **`placement_group`**: Target data center placement group.
 * **`table_name`**: AWS DynamoDB table tracking job specifications (`IOOS-Sandbox-Compute-Nodes`).
 
+---
+
+> **Important:** Ensure `image_id` matches the exact AMI associated with your running head node so compute nodes mount identical environments. Besides that, you only need to worry about changing `nodeType`, `nodeCount`, and `tags` if desired. 
+
+---
 #### Step 4: Submit and Monitor Job
 ```bash
 nohup ./workflows/workflow_main.py ../cluster.configs/Experiments/python.ioos ../job.configs/MODEL_EXPERIMENTS/python.experiment > cloudflow_test.out &
@@ -345,6 +350,12 @@ Edit `../cluster.configs/Experiments/python.ioos` (Set `nodeCount` to desired sc
 * **`subnet_id`**: AWS account subnet identifier.
 * **`placement_group`**: Target data center placement group.
 * **`table_name`**: AWS DynamoDB table tracking job specifications (`IOOS-Sandbox-Compute-Nodes`).
+
+---
+
+> **Important:** Ensure `image_id` matches the exact AMI associated with your running head node so compute nodes mount identical environments. Besides that, you only need to worry about changing `nodeType`, `nodeCount`, and `tags` if desired. 
+
+---
 
 #### Step 3: Configure Shell Launcher Script
 Edit `workflows/python_mpi_basic_run.sh` to load required runtime modules:
@@ -618,7 +629,13 @@ Edit `../cluster.configs/Experiments/python.ioos`:
 * **`subnet_id`**: AWS account subnet identifier.
 * **`placement_group`**: Target data center placement group.
 * **`table_name`**: AWS DynamoDB table tracking job specifications (`IOOS-Sandbox-Compute-Nodes`).
-  
+
+---
+
+> **Important:** Ensure `image_id` matches the exact AMI associated with your running head node so compute nodes mount identical environments. Besides that, you only need to worry about changing `nodeType`, `nodeCount`, and `tags` if desired. 
+
+---
+
 3. **Task Integration** (`workflows/tasks.py`)
 Modify the code accordingly within the `python_dask_experiment_run` function to conform with your specific Python dask data parallelism implementation. The code block below serves as a guide for proper implementation of the dask data parallelism method on cloudflow:
    ```python
@@ -861,7 +878,13 @@ Edit `../cluster.configs/Experiments/python.ioos`:
 * **`subnet_id`**: AWS account subnet identifier.
 * **`placement_group`**: Target data center placement group.
 * **`table_name`**: AWS DynamoDB table tracking job specifications (`IOOS-Sandbox-Compute-Nodes`).
-  
+
+---
+
+> **Important:** Ensure `image_id` matches the exact AMI associated with your running head node so compute nodes mount identical environments. Besides that, you only need to worry about changing `nodeType`, `nodeCount`, and `tags` if desired. 
+
+---
+
 3. **Task Integration** (`workflows/tasks.py`):
 Modify the code accordingly within the `python_dask_experiment_run` function to conform with your specific Python dask task parallelism implementation. The code block below serves as a guide for proper implementation of the dask task parallelism method on cloudflow:
    ```python
