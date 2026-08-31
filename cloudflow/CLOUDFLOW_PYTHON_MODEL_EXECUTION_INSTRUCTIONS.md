@@ -359,22 +359,150 @@ When launched, the Cloudflow pipeline executes the following stages automaticall
 1. **Resource Allocation:** Generates a dynamic cluster name (e.g., `PYTHON-independent-cricket`), queries AWS for requested EC2 compute instances, logs telemetry to DynamoDB, and calculates initial cost projections.
 
 ```bash
+jobtype: python_experiment
+13:29:26.576 | INFO    | Flow run 'magic-roadrunner' - Beginning flow run 'magic-roadrunner' for flow 'experiment-flow'
+13:29:26.584 | INFO    | Flow run 'magic-roadrunner' - View at http://127.0.0.1:4200/runs/flow-run/167d22f0-5e93-48b4-9f50-2175ceba14c8
+ 2026-08-31 13:29:26,607  INFO - ClusterFactory.cluster | Attempting to make a new cluster : AWS
+13:29:26.607 | INFO    | workflow - Attempting to make a new cluster : AWS
+
+***************************************************************
+Your cluster name: PYTHON-magic-roadrunner
+***************************************************************
+
+ 2026-08-31 13:29:26,609  INFO - AWSCluster.memorable_tags | Your cluster Name: PYTHON-magic-roadrunner
+13:29:26.609 | INFO    | workflow - Your cluster Name: PYTHON-magic-roadrunner
+self.tags: [{'Key': 'Name', 'Value': 'PYTHON-magic-roadrunner'}, {'Key': 'Project', 'Value': 'MPI_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}]
+ 2026-08-31 13:29:26,869  INFO - AWSCluster.__init__ | nodeCount: 2  PPN: 8
+13:29:26.869 | INFO    | workflow - nodeCount: 2  PPN: 8
+ 2026-08-31 13:29:26,869  INFO - ClusterFactory.cluster | Created new AWS cluster
+13:29:26.869 | INFO    | workflow - Created new AWS cluster
+13:29:26.871 | INFO    | Task run 'cluster_init-66e' - Finished in state Completed()
+in job init
+<cloudflow.job.PYTHON_Experiment.PYTHON_Experiment object at 0x14f1c8dbdfd0>
+13:29:26.878 | INFO    | Task run 'job_init-71e' - Finished in state Completed()
+ 2026-08-31 13:29:26,881  INFO - cluster_tasks.cluster_start | Starting 2 instances ...
+13:29:26.881 | INFO    | workflow - Starting 2 instances ...
+ 2026-08-31 13:29:26,882  INFO - cluster_tasks.cluster_start | Waiting for nodes to start ...
+13:29:26.882 | INFO    | workflow - Waiting for nodes to start ...
+
+===============================================================
+  ESTIMATED CLUSTER COST  (on-demand, Linux, no pre-installed SW)
+===============================================================
+  Instance type : c5.4xlarge
+  Region        : us-east-2  (US East (Ohio))
+  Node count    : 2
+  Per-node rate : $0.6800 / hr
+  Cluster cost  : $1.3600 / hr  |  $32.64 / day
+  NOTE: Estimate is for on-demand pricing only.
+        Actual charges depend on run time and AWS billing.
+===============================================================
+
+ 2026-08-31 13:29:27,047  INFO - AWSCluster._estimate_and_print_cost | Cost estimate – 2x c5.4xlarge @ us-east-2: $1.3600/hr  |  $32.64/day
+13:29:27.047 | INFO    | workflow - Cost estimate – 2x c5.4xlarge @ us-east-2: $1.3600/hr  |  $32.64/day
 ```
 
 2. **Node Initialization:** Waits for requested instances to enter a running state and initializes environment mounts.
 ```bash
- 
+ 2026-08-31 13:29:29,086  INFO - AWSCluster.start | AWS resources have been allocated for cloudflow job. Waiting for nodes to enter running state ...
+13:29:29.086 | INFO    | workflow - AWS resources have been allocated for cloudflow job. Waiting for nodes to enter running state ...
+ 2026-08-31 13:29:29,110  INFO - AWSCluster.__put_instance_records | DB_table output for head node based on instance id i-0042d07eae3ded59e: {'instance-id': 'i-0042d07eae3ded59e', 'name-tag': 'PYTHON-magic-roadrunner', 'instance-type': 'c5.4xlarge', 'start-time': 1788182969, 'human-time': '2026-08-31 13:29 UTC', 'minutes-max': 120, 'username': 'jason_ducker'}
+13:29:29.110 | INFO    | workflow - DB_table output for head node based on instance id i-0042d07eae3ded59e: {'instance-id': 'i-0042d07eae3ded59e', 'name-tag': 'PYTHON-magic-roadrunner', 'instance-type': 'c5.4xlarge', 'start-time': 1788182969, 'human-time': '2026-08-31 13:29 UTC', 'minutes-max': 120, 'username': 'jason_ducker'}
+ 2026-08-31 13:29:29,110  INFO - AWSCluster.__put_instance_records | DB_table output for head node based on instance id i-0289c9482b3e35507: {'instance-id': 'i-0289c9482b3e35507', 'name-tag': 'PYTHON-magic-roadrunner', 'instance-type': 'c5.4xlarge', 'start-time': 1788182969, 'human-time': '2026-08-31 13:29 UTC', 'minutes-max': 120, 'username': 'jason_ducker'}
+13:29:29.110 | INFO    | workflow - DB_table output for head node based on instance id i-0289c9482b3e35507: {'instance-id': 'i-0289c9482b3e35507', 'name-tag': 'PYTHON-magic-roadrunner', 'instance-type': 'c5.4xlarge', 'start-time': 1788182969, 'human-time': '2026-08-31 13:29 UTC', 'minutes-max': 120, 'username': 'jason_ducker'}
+ 2026-08-31 13:29:39,997  INFO - AWSCluster.start | Waiting an additional 150 seconds for nodes to fully initialize ...
+13:29:39.997 | INFO    | workflow - Waiting an additional 150 seconds for nodes to fully initialize ...
 ```
 
 3. **Model Execution:** Enters the target directory (`MODEL_DIR`), checks the Python MPI script for syntax errors before proceeding to executing the script, and then executes the Python script using MPI over SSH (e.g., `mpiexec -launcher ssh -hosts <IP> -np <CORES> ... python $SCRIPT`)
 ```bash
-
+instance 1 : running
+instance 2 : running
+{"instance_id": "i-0042d07eae3ded59e", "instance_type": "c5.4xlarge", "state": "pending", "host": "10.26.36.23", "tags": [{"Key": "Name", "Value": "PYTHON-magic-roadrunner"}, {"Key": "Project", "Value": "MPI_Model_Experiment"}, {"Key": "ApprovedSubnet", "Value": "subnet-00075cfbfcbc8f2cf"}], "user": "jason_ducker", "start_time": 1788183130.3750582}
+{"instance_id": "i-0289c9482b3e35507", "instance_type": "c5.4xlarge", "state": "pending", "host": "10.26.36.71", "tags": [{"Key": "Name", "Value": "PYTHON-magic-roadrunner"}, {"Key": "Project", "Value": "MPI_Model_Experiment"}, {"Key": "ApprovedSubnet", "Value": "subnet-00075cfbfcbc8f2cf"}], "user": "jason_ducker", "start_time": 1788183130.3750582}
+13:32:10.379 | INFO    | Task run 'cluster_start-064' - Finished in state Completed()
+runscript: /mnt/efs/fs1/save/jason_ducker/Cloud-Sandbox/cloudflow/workflows/experiment_launcher.sh
+**********************************************************
+Current directory is /save/jason_ducker/Cloud-Sandbox/cloudflow
+**********************************************************
++ set -u
++ export SCRIPT=/save/jason_ducker/GSOC_Group/test_mpi.py
++ SCRIPT=/save/jason_ducker/GSOC_Group/test_mpi.py
++ export EXEC=/save/jason_ducker/miniforge3/envs/ocsmesh_test/bin/python
++ EXEC=/save/jason_ducker/miniforge3/envs/ocsmesh_test/bin/python
++ echo '--- '
+--- 
++ echo '--- Checking PYTHON MPI script for syntax errors and then running PYTHON MPI script -----------------'
+--- Checking PYTHON MPI script for syntax errors and then running PYTHON MPI script -----------------
++ echo ---
+---
++ /save/jason_ducker/miniforge3/envs/ocsmesh_test/bin/python -m py_compile /save/jason_ducker/GSOC_Group/test_mpi.py
++ mpirun -envall -launcher ssh -hosts 10.26.36.23,10.26.36.71 -np 16 -ppn 8 /save/jason_ducker/miniforge3/envs/ocsmesh_test/bin/python /save/jason_ducker/GSOC_Group/test_mpi.py
+Rank 1/16 is alive on host 'ip-10-26-36-23.us-east-2.compute.internal'
+Rank 2/16 is alive on host 'ip-10-26-36-23.us-east-2.compute.internal'
+Rank 3/16 is alive on host 'ip-10-26-36-23.us-east-2.compute.internal'
+Rank 4/16 is alive on host 'ip-10-26-36-23.us-east-2.compute.internal'
+Rank 5/16 is alive on host 'ip-10-26-36-23.us-east-2.compute.internal'
+Rank 6/16 is alive on host 'ip-10-26-36-23.us-east-2.compute.internal'
+Rank 7/16 is alive on host 'ip-10-26-36-23.us-east-2.compute.internal'
+Rank 8/16 is alive on host 'ip-10-26-36-71.us-east-2.compute.internal'
+Rank 9/16 is alive on host 'ip-10-26-36-71.us-east-2.compute.internal'
+Rank 10/16 is alive on host 'ip-10-26-36-71.us-east-2.compute.internal'
+Rank 11/16 is alive on host 'ip-10-26-36-71.us-east-2.compute.internal'
+Rank 12/16 is alive on host 'ip-10-26-36-71.us-east-2.compute.internal'
+Rank 13/16 is alive on host 'ip-10-26-36-71.us-east-2.compute.internal'
+Rank 14/16 is alive on host 'ip-10-26-36-71.us-east-2.compute.internal'
+Rank 15/16 is alive on host 'ip-10-26-36-71.us-east-2.compute.internal'
+============================================================
+          MPI4PY CONFIGURATION SANITY CHECK          
+============================================================
+Python Version:   3.13.14
+MPI Vendor:       Intel MPI v2021.12.1
+Total MPI Ranks:  16
+------------------------------------------------------------
+Rank 0/16 is alive on host 'ip-10-26-36-23.us-east-2.compute.internal'
+------------------------------------------------------------
+Running Ring Communication Pass-Around Test...
+Rank 0 received token back from Rank 15. Value matches: True
+============================================================
++ '[' 0 -ne 0 ']'
++ echo 'Python script execution has succesfully completed on the cloud!'
+Python script execution has succesfully completed on the cloud!
 ```
 
 
 4. **Deprovisioning & Reporting:** Automatically terminates instantiated compute instance upon run completion or failure, releasing resources and reporting actual compute wall-time and final estimated AWS cost.
 ```bash
++ echo 'Python script execution took 0 minutes and 18 seconds elapsed.'
+Python script execution took 0 minutes and 18 seconds elapsed.
+ 2026-08-31 13:32:28,691  INFO - tasks.experiment_run | PYTHON mpi script execution finished successfully
+13:32:28.691 | INFO    | workflow - PYTHON mpi script execution finished successfully
+13:32:28.692 | INFO    | Task run 'experiment_run-bf0' - Finished in state Completed()
+ 2026-08-31 13:32:28,696  INFO - AWSCluster.terminate | Terminating instances: [{'instance_id': 'i-0042d07eae3ded59e', 'instance_type': 'c5.4xlarge', 'state': 'pending', 'host': '10.26.36.23', 'tags': [{'Key': 'Name', 'Value': 'PYTHON-magic-roadrunner'}, {'Key': 'Project', 'Value': 'MPI_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}], 'user': 'jason_ducker', 'start_time': 1788183130.3750582}, {'instance_id': 'i-0289c9482b3e35507', 'instance_type': 'c5.4xlarge', 'state': 'pending', 'host': '10.26.36.71', 'tags': [{'Key': 'Name', 'Value': 'PYTHON-magic-roadrunner'}, {'Key': 'Project', 'Value': 'MPI_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}], 'user': 'jason_ducker', 'start_time': 1788183130.3750582}]
+13:32:28.696 | INFO    | workflow - Terminating instances: [{'instance_id': 'i-0042d07eae3ded59e', 'instance_type': 'c5.4xlarge', 'state': 'pending', 'host': '10.26.36.23', 'tags': [{'Key': 'Name', 'Value': 'PYTHON-magic-roadrunner'}, {'Key': 'Project', 'Value': 'MPI_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}], 'user': 'jason_ducker', 'start_time': 1788183130.3750582}, {'instance_id': 'i-0289c9482b3e35507', 'instance_type': 'c5.4xlarge', 'state': 'pending', 'host': '10.26.36.71', 'tags': [{'Key': 'Name', 'Value': 'PYTHON-magic-roadrunner'}, {'Key': 'Project', 'Value': 'MPI_Model_Experiment'}, {'Key': 'ApprovedSubnet', 'Value': 'subnet-00075cfbfcbc8f2cf'}], 'user': 'jason_ducker', 'start_time': 1788183130.3750582}]
+timelog: PYTHON-magic-roadrunner: 1 minutes - 2 x c5.4xlarge
 
+===============================================================
+  ACTUAL CLUSTER COST  (on-demand, Linux, based on real runtime)
+===============================================================
+  Cluster name  : PYTHON-magic-roadrunner
+  Instance type : c5.4xlarge
+  Node count    : 2
+  Elapsed time  : 1 minutes  (0.017 hrs)
+  Per-node rate : $0.6800 / hr
+  ACTUAL COST   : $0.0227
+  NOTE: On-demand rate only; Reserved/Spot pricing will differ.
+===============================================================
+
+ 2026-08-31 13:32:29,689  INFO - cluster_tasks.cluster_terminate | Responses from terminate: 
+13:32:29.689 | INFO    | workflow - Responses from terminate: 
+[{'CurrentState': {'Code': 32, 'Name': 'shutting-down'},
+  'InstanceId': 'i-0042d07eae3ded59e',
+  'PreviousState': {'Code': 16, 'Name': 'running'}}]
+[{'CurrentState': {'Code': 32, 'Name': 'shutting-down'},
+  'InstanceId': 'i-0289c9482b3e35507',
+  'PreviousState': {'Code': 16, 'Name': 'running'}}]
+13:32:29.690 | INFO    | Task run 'cluster_terminate-c2b' - Finished in state Completed()
+13:32:30.601 | INFO    | Flow run 'magic-roadrunner' - Finished in state Completed()
 ```
 **You've succesfully completed your MPI Python model execution using the IOOS Cloud-Sandbox cloudflow method!**
 
