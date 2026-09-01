@@ -52,6 +52,7 @@ Comprehensive guides and instructions for provisioning, configuring, and executi
     - [SECOFS](models/secofs/README.md)
     - [ECCOFS](models/eccofs/README.md)
     - [PYTHON](cloudflow/CLOUDFLOW_PYTHON_MODEL_EXECUTION_INSTRUCTIONS.md)
+    - [Basic Model Implementation](cloudflow/CLOUDFLOW_MODEL_EXECUTION_INSTRUCTIONS.md)
 
 - [Integrate a new model into the cloud sandbox](CLOUD_SANDBOX_MODEL_INTEGRATION_TEMPLATE.md)
 
