@@ -29,6 +29,12 @@ It provides repeatable configurations, model code and required libraries, input 
 - [CORA ADCIRC](https://registry.opendata.aws/noaa-nos-cora/) model
 - [SCHISM](https://ccrm.vims.edu/schismweb/)
 - [National Water Model](https://water.noaa.gov/about/nwm)
+- [UCLA-ROMS](https://github.com/CESR-lab/ucla-roms)
+- [UFS-Coastal](https://github.com/oceanmodeling/ufs-coastal-app)
+- [ECCOFS](https://registry.opendata.aws/noaa-nos-eccofs/)
+- [SECOFS](https://link.springer.com/article/10.1007/s10236-026-01794-8)
+- [NECOFS](https://comt.ioos.us/projects/necofs_transition)
+
 
 ## Documentation
 
