@@ -132,6 +132,9 @@ class AWSCluster(Cluster):
 
     daskworker : Popen
         a reference to the Dask worker process started on the cluster
+
+    fsx_lustre : int
+        An integer value indicating if user is requesting to allocate and mount the FSX Lustre file system. A value of 1 means yes, while a value of 0 means no.
     """
 
     def __init__(self, configfile):
@@ -189,6 +192,8 @@ class AWSCluster(Cluster):
 
         self.daskscheduler = None
         self.daskworker = None
+
+        self.fsx_lustre = 0
 
         log.info(f"nodeCount: {self.nodeCount}  PPN: {self.PPN}")
 
