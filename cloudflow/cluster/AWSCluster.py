@@ -27,6 +27,9 @@ import prefect
 from cloudflow.cluster import AWSHelper
 from cloudflow.cluster.Cluster import Cluster
 
+# Import the FSX Lustre file system class
+from cloudflow.services.FSxScratchDisk import FSxScratchDisk
+
 __copyright__ = "Copyright © 2025 Tetra Tech, Inc. All rights reserved."
 __license__ = "BSD 3-Clause"
 
