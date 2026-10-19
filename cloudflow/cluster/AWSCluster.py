@@ -388,6 +388,15 @@ class AWSCluster(Cluster):
                 'Defaulting to value of {self.vm_max_retries} number of retries.'
             )
 
+        try:
+            self.fsx_lustre = cfDict['fsx_lustre']
+        except KeyError:
+            print(
+                f'Cluster configuration variable fsx_lustre was not specified by user. '
+                'Defaulting to value of {self.fsx_lustre} which implies that this cloudflow implementation will not mount a FSx Lustre file system for the simulation.'
+                'If a user wants to mount a FSx Lustre file system, then please include the fsx_lustre variable with a value of 1 in the cluster configuration file.'
+            )
+            
         self.tags = self.memorable_tags(cfDict['tags'])
         self.image_id = cfDict['image_id']
         self.key_name = cfDict['key_name']
