@@ -405,6 +405,11 @@ class AWSCluster(Cluster):
         self.subnet_id = cfDict['subnet_id']
         self.placement_group = cfDict['placement_group']
 
+        # Construct FSx Lustre temporary directory
+        for tag in self.tags:
+            if tag["Key"] == "Name":
+                self.PMTP = "/ptmp/" + os.getenv('USER') "/" + str(tag["Value"])
+
         # Enforce DynamoDB table usage
         if 'table_name' in cfDict:
             self.table_name = cfDict['table_name']
