@@ -44,7 +44,7 @@ class FSxScratchDisk(ScratchDisk):
             If there are no other user.files then the scratch disk can be unmounted and deleted
     '''
 
-    def __init__(self, cluster: Cluster, job: Job):
+    def __init__(self, cluster: Cluster):
         """ Constructor """
 
         self.mountname: str = None
@@ -59,7 +59,7 @@ class FSxScratchDisk(ScratchDisk):
         self.sg_ids = cluster.sg_ids
         self.subnet_id = cluster.subnet_id
         self.region = cluster.region
-        self.mountpath = job.PTMP
+        self.mountpath = cluster.PTMP
 
         self.username = os.environ.get('USER')
 
