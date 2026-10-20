@@ -197,6 +197,7 @@ class AWSCluster(Cluster):
         self.daskworker = None
 
         self.fsx_lustre = 0
+        self.PTMP = ''
 
         log.info(f"nodeCount: {self.nodeCount}  PPN: {self.PPN}")
 
