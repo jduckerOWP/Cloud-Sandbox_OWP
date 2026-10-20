@@ -727,6 +727,29 @@ class AWSCluster(Cluster):
 
         self.__save_instance_data(instances)
 
+        if self.fsx_lustre == 1:
+            # Provision & Wait for FSx Lustre Storage after allocating EC2
+            try:
+                log.info("Initializing FSxScratchDisk before allocating EC2 nodes...")
+                self.scratch_disk = FSxScratchDisk(cluster=self)
+                self.scratch_disk.create()  # Handles creation and blocks until AVAILABLE locally
+                log.info(f"FSx Scratch Disk is ready at base path: {self.scratch_disk.mountpath}")
+            except Exception as e:
+                log.exception(f"FSx Scratch Disk setup failed: {e}")
+                self.terminate()
+                raise
+
+            # 4. Remote Mount FSx onto All Compute Nodes
+            hosts = self.getHosts()
+            try:
+                log.info(f"Mounting FSx Scratch Disk ({self.scratch_disk.mountpath}) across worker hosts: {hosts}")
+                self.scratch_disk.remote_mount(hosts)
+                log.info("FSx Scratch Disk successfully mounted across all cluster nodes.")
+            except Exception as e:
+                log.exception(f"Failed to mount FSx Scratch Disk on remote nodes: {e}")
+                self.terminate()
+                raise
+
         return
 
 
