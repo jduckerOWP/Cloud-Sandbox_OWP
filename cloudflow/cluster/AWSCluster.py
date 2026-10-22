@@ -785,6 +785,22 @@ class AWSCluster(Cluster):
         # Terminate any running dask scheduler
         self.terminateDaskScheduler()
 
+        # Transfer Data & Clean up FSX for Lustre file system if allocated
+        if self.fsx_lustre == 1:
+            # Data staging/syncing from /ptmp back to EFS volume
+            ptmp2efs = jtasks.ptmp2efs(job,self) 
+            # Unmount the FSX Lustre scratch disk from the head node
+            try:
+                log.info("Unmounting and terminating FSX Lustre Scratch Disk from head node...")
+                self.scratch_disk.delete()
+            except Exception as e:
+                log.error(
+                    f"Error while deleting FSX Scratch Disk ({self.scratch_disk.mountpath}) from the head node: {e}\n"
+                    f"--> MANUAL ACTION REQUIRED: Please log into the head node and manually unmount the filesystem using:\n"
+                    f"    sudo umount -fl {self.scratch_disk.mountpath}\n"
+                    f"--> Also verify and delete the FSX file system ID ({self.scratch_disk.filesystemid}) in the AWS FSX Console if it remains."
+                )
+
         log.info(f"Terminating instances: {self.instances}")
 
         responses = []
