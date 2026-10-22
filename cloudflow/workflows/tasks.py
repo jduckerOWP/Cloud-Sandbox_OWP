@@ -840,6 +840,12 @@ def experiment_run(cluster: Cluster, job: Job):
         # class variable is required
         MODEL_DIR = job.MODEL_DIR
 
+    # If user leverages FSX Lustre file system implementation
+    # then dynamically switch their model directory here
+    # to the PTMP user prescribe model directory
+    if cluster.fsx_lustre == 1:
+        MODEL_DIR = cluster.PTMP
+
     # experiment shell launcher script
     runscript = f"{curdir}/experiment_launcher.sh"
     print(f'runscript: {runscript}')
