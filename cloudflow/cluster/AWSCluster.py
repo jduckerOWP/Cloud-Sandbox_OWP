@@ -613,6 +613,12 @@ class AWSCluster(Cluster):
         # see what the cluster will cost before any charges are incurred.
         self._estimate_and_print_cost()
 
+        # Flag the FSX Lustre implementation to ensure Job class model directory
+        # attribute exists before spending money on querying resources
+        if self.fsx_lustre == 1 and not hasattr(job, 'MODEL_DIR'):
+            log.exception("FSx for Lustre enabled, but 'job.MODEL_DIR' is not defined to ensure we copy over the model setup to FSX Lustre file system.")
+            raise
+            
         ec2 = boto3.resource('ec2', region_name=self.region)
 
         instances = []
