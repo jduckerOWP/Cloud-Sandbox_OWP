@@ -18,6 +18,7 @@ if os.path.abspath('..') not in sys.path:
 curdir = os.path.dirname(os.path.abspath(__file__))
 
 from cloudflow.job.Job import Job
+from cloudflow.cluster.Cluster import Cluster
 from cloudflow.plotting import plot_roms
 
 from cloudflow.plotting import plot_fvcom
@@ -185,7 +186,60 @@ def ptmp2com(job: Job):
 
     return
 
+@task
+def efs2ptmp(job: Job, cluster: Cluster):
+    """ Transfer completed run from EFS volume to FSX Lustre scratch disk
 
+    Parameters
+    ----------
+    job : Job
+        The Job object with the MODEL_DIR attribute set.
+
+    cluster : Cluster
+        The Job object with the PTMP attribute set.
+    """
+
+    log.info(f"Copying {job.MODEL_DIR} model run directory to {cluster.PTMP} FSX Lustre scratch directory")
+
+    try:
+        cmd = f'rsync -ahP {job.MODEL_DIR}/* {job.PTMP}/'
+        result = subprocess.run(cmd, universal_newlines=True, shell=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        if result.returncode != 0:
+            log.error(result.stdout)
+            log.error(f'Error copying model directory {job.MODEL_DIR} to the FSX Lustre scratch directory {job.PTMP}')
+    except Exception as e:
+        log.exception(result.stdout)
+        log.exception(f'Exception copying model directory {job.MODEL_DIR} to the FSX Lustre scratch directory {job.PTMP}')
+        raise
+
+@task
+def ptmp2efs(job: Job, cluster: Cluster):
+    """ Transfer completed run from FSX Lustre scratch disk to EFS volume
+
+    Parameters
+    ----------
+    job : Job
+        The Job object with the MODEL_DIR attribute set.
+
+    cluster : Cluster
+        The Job object with the PTMP attribute set.
+    """
+
+    log.info(f"Copying {cluster.PTMP} FSX Lustre scratch directory output to {job.MODEL_DIR} model run directory")
+
+    try:
+        cmd = f'rsync -ahP --ignore-existing {job.PTMP}/* {job.MODEL_DIR}/'
+        result = subprocess.run(cmd, universal_newlines=True, shell=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        if result.returncode != 0:
+            log.error(result.stdout)
+            log.error(f'Error copying FSX Lustre scratch directory output in {job.PTMP} to the EFS model directory {job.MODEL_DIR}')
+    except Exception as e:
+        log.exception(result.stdout)
+        log.exception(f'Exception FSX Lustre scratch directory output in {job.PTMP} to the EFS model directory {job.MODEL_DIR}')
+        raise
+		
 @task
 def baseline_from_Job(job: Job):
     """ Provides a list of the verification files that match the parameters provided by the Job object
