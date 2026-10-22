@@ -31,6 +31,9 @@ from cloudflow.job.Job import Job
 # Import the FSX Lustre file system class
 from cloudflow.services.FSxScratchDisk import FSxScratchDisk
 
+# Import job tasks for FSX Lustre file system transfer
+from cloudflow.workflows import job_tasks as jtasks
+
 __copyright__ = "Copyright © 2025 Tetra Tech, Inc. All rights reserved."
 __license__ = "BSD 3-Clause"
 
@@ -746,7 +749,7 @@ class AWSCluster(Cluster):
                 self.terminate()
                 raise
 
-            # 4. Remote Mount FSx onto All Compute Nodes
+            # Remote Mount FSx onto All Compute Nodes
             hosts = self.getHosts()
             try:
                 log.info(f"Mounting FSx Scratch Disk ({self.scratch_disk.mountpath}) across worker hosts: {hosts}")
@@ -757,6 +760,10 @@ class AWSCluster(Cluster):
                 self.terminate()
                 raise
 
+            # Transfer EFS volume model directory setup to FSX Lustre file system
+            efs2ptmp = jtasks.efs2ptmp(job,self)   
+
+        
         return
 
 
