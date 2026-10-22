@@ -71,7 +71,7 @@ def simple_experiment_flow(conf, jobfile):
 
     # Start the cluster
     try:
-        ctasks.cluster_start(cluster)
+        ctasks.cluster_start(cluster, expjob)
     except Exception as e:
         log.exception('cluster_start failed')
         raise
@@ -83,7 +83,7 @@ def simple_experiment_flow(conf, jobfile):
         log.exception('simple_run failed')
 
     # Terminate the cluster nodes
-    ctasks.cluster_terminate(cluster)
+    ctasks.cluster_terminate(cluster, expjob)
 
     
 
@@ -128,7 +128,7 @@ def multi_hindcast_flow(conf, jobfile, sshuser=None):
 
     # Start the cluster
     try:
-        ctasks.cluster_start(cluster)
+        ctasks.cluster_start(cluster, job)
     except Exception as e:
         log.exception('cluster_start failed')
         raise
@@ -144,7 +144,7 @@ def multi_hindcast_flow(conf, jobfile, sshuser=None):
         log.exception('forecast_run failed')
 
     # Terminate the cluster nodes
-    ctasks.cluster_terminate(cluster)
+    ctasks.cluster_terminate(cluster, job)
 
     # Copy the results to /com (liveocean does not run in ptmp currently)
     #jtasks.ptmp2com(job)
@@ -201,7 +201,7 @@ def fcst_flow(fcstconf, fcstjobfile, sshuser=None):
 
     # Start the cluster
     try:
-      ctasks.cluster_start(cluster)
+      ctasks.cluster_start(cluster, fcstjob)
     except Exception as e:
       log.exception('cluster_start failed')
       raise
@@ -213,7 +213,7 @@ def fcst_flow(fcstconf, fcstjobfile, sshuser=None):
       log.exception('forecast_run failed')
 
     # Terminate the cluster nodes
-    ctasks.cluster_terminate(cluster)
+    ctasks.cluster_terminate(cluster, fcstjob)
 
 
 
@@ -253,7 +253,7 @@ def ufs_flow(ufsconf, ufsjobfile):
         # Start the cluster
         cluster_started = False
         try:
-            ctasks.cluster_start(cluster)
+            ctasks.cluster_start(cluster, ufsjob)
             cluster_started = True
         except Exception as e:
             log.exception('cluster_start failed')
@@ -272,7 +272,7 @@ def ufs_flow(ufsconf, ufsjobfile):
         
 
         # Terminate the cluster nodes
-        ctasks.cluster_terminate(cluster)
+        ctasks.cluster_terminate(cluster, ufsjob)
 
 
 
@@ -295,7 +295,7 @@ def python_experiment_dask_flow(conf, jobfile):
 
     # Start the machine
     try:
-        ctasks.cluster_start(cluster)
+        ctasks.cluster_start(cluster, python_job)
     except Exception as e:
         log.exception('cluster_start failed')
         raise
@@ -322,7 +322,7 @@ def python_experiment_dask_flow(conf, jobfile):
         log.exception('dask_client_close failed, likely due to nonexistent processes')
 
     # Terminate the AWS resources allocated for dask job
-    ctasks.cluster_terminate(cluster)
+    ctasks.cluster_terminate(cluster, python_job)
 
 
 
@@ -362,7 +362,7 @@ def experiment_flow(conf, jobfile):
         
     # Start the cluster
     try:
-        ctasks.cluster_start(cluster)
+        ctasks.cluster_start(cluster, experiment_job)
     except Exception as e:
         log.exception('cluster_start failed')
         raise
@@ -374,7 +374,7 @@ def experiment_flow(conf, jobfile):
         log.exception('experiment_run failed')
 
     # Terminate the cluster nodes
-    ctasks.cluster_terminate(cluster)
+    ctasks.cluster_terminate(cluster, experiment_job)
 
 
 
