@@ -26,6 +26,7 @@ import prefect
 # from cloudflow.cluster import AWSHelper
 from cloudflow.cluster import AWSHelper
 from cloudflow.cluster.Cluster import Cluster
+from cloudflow.job.Job import Job
 
 # Import the FSX Lustre file system class
 from cloudflow.services.FSxScratchDisk import FSxScratchDisk
@@ -602,7 +603,7 @@ class AWSCluster(Cluster):
                 batch.delete_item(Key={"instance-id": iid})
 
  
-    def start(self):
+    def start(self, job: Job):
         """ Provision the configured cluster in the cloud.
         """
 
@@ -754,7 +755,7 @@ class AWSCluster(Cluster):
 
 
 
-    def terminate(self):
+    def terminate(self, job: Job):
         """ Shutdown and remove the EC2 Instances in this cluster.
             Also terminates any associated Dask Worker and Scheduler processes.
 
