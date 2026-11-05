@@ -102,13 +102,13 @@ elif [ $impi -eq 1 ]; then
   # Slice up SCHISM tasks between OpenMP and MPI protocols to 
   # optimize memory allocation for the slave ranks. This method
   # will allow the hpc node instances to work with large SCHISM
-  # meshes. For smaller meshes, consider revising $SCHISM_ntasks
-  # and $SCHISM_NPROCS to just both be equal to $NPROCS
-  elif [[ "$JOBTYPE" == "schism_experiment" && "$APP" == "basic" ]]; then
-    export SCHISM_ntasks=70
-    export OMP_NUM_THREADS=1
-    export SCHISM_NPROCS=$((SCHISM_ntasks*(NPROCS/96)))
-    export MPIOPTS="-launcher ssh -hosts $HOSTS -np $SCHISM_NPROCS -ppn $SCHISM_ntasks"
+  # meshes. Uncomment the section below if you're having this issue
+  # on hpc6a instances or ones similar with more constrained RAM.
+  #elif [[ "$JOBTYPE" == "schism_experiment" && "$APP" == "basic" ]]; then
+  #  export SCHISM_ntasks=70
+  #  export OMP_NUM_THREADS=1
+  #  export SCHISM_NPROCS=$((SCHISM_ntasks*(NPROCS/96)))
+  #  export MPIOPTS="-launcher ssh -hosts $HOSTS -np $SCHISM_NPROCS -ppn $SCHISM_ntasks"
   else
     export MPIOPTS="-launcher ssh -hosts $HOSTS -np $NPROCS -ppn $PPN"
   fi
