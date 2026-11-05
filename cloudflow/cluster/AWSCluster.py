@@ -412,7 +412,7 @@ class AWSCluster(Cluster):
         # Construct FSx Lustre temporary directory
         for tag in self.tags:
             if tag["Key"] == "Name":
-                self.PMTP = os.path.join("/ptmp", os.getenv('USER'), str(tag["Value"]))
+                self.PTMP = os.path.join("/ptmp", os.getenv('USER'), str(tag["Value"]))
 
         # Enforce DynamoDB table usage
         if 'table_name' in cfDict:
