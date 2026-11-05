@@ -8,7 +8,7 @@ import logging
 import math
 import inspect
 import getpass
-
+import os
 from pathlib import Path
 
 import boto3
