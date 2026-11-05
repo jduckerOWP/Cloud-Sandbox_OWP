@@ -730,7 +730,7 @@ class AWSCluster(Cluster):
             inum += 1
 
         if not (ready):
-            self.terminate()
+            self.terminate(job)
             raise Exception('Nodes did not start within time limit... terminating them...')
 
         self.__start_time = time.time()
@@ -746,7 +746,7 @@ class AWSCluster(Cluster):
                 log.info(f"FSx Scratch Disk is ready at base path: {self.scratch_disk.mountpath}")
             except Exception as e:
                 log.exception(f"FSx Scratch Disk setup failed: {e}")
-                self.terminate()
+                self.terminate(job)
                 raise
 
             # Remote Mount FSx onto All Compute Nodes
@@ -757,7 +757,7 @@ class AWSCluster(Cluster):
                 log.info("FSx Scratch Disk successfully mounted across all cluster nodes.")
             except Exception as e:
                 log.exception(f"Failed to mount FSx Scratch Disk on remote nodes: {e}")
-                self.terminate()
+                self.terminate(job)
                 raise
 
             # Transfer EFS volume model directory setup to FSX Lustre file system
