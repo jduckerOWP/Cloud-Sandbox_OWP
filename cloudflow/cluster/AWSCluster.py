@@ -738,6 +738,9 @@ class AWSCluster(Cluster):
         self.__save_instance_data(instances)
 
         if self.fsx_lustre == 1:
+            # Assign the PTMP directory pathway constructed from the cluster configuration file
+            # that is tagged based on the job name
+            job.PTMP = self.PTMP
             # Provision & Wait for FSx Lustre Storage after allocating EC2
             try:
                 log.info("Initializing FSxScratchDisk before allocating EC2 nodes...")
