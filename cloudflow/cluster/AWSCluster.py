@@ -185,6 +185,9 @@ class AWSCluster(Cluster):
         # Can add this to the cluster config if so desired - Lambda sweeper function can use it or some other hard value
         self.minutes_max = 120
         # self.hosts = ''
+        # Default FSx lustre option to keep off unless requested
+        self.fsx_lustre = 0
+        self.PTMP = ''
 
         # Cached on-demand rate (USD/hr per node) fetched from the Pricing API
         # during start().  Stored here so terminate() can compute the actual
@@ -199,9 +202,6 @@ class AWSCluster(Cluster):
 
         self.daskscheduler = None
         self.daskworker = None
-
-        self.fsx_lustre = 0
-        self.PTMP = ''
 
         log.info(f"nodeCount: {self.nodeCount}  PPN: {self.PPN}")
 
