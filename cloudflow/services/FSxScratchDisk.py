@@ -115,7 +115,7 @@ class FSxScratchDisk(ScratchDisk):
             #result = subprocess.run(['df', '--output=source', '/ptmp'], encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             result = subprocess.run(['df', '--output=source', self.mountpath], encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             dfmountname = result.stdout.split()[1].split('/')[1]
-            log.debug(f"dfmountname: {dfmountname}")
+            log.info(f"dfmountname: {dfmountname}")
 
             # search existing FileSystems list for mountname
             filesystems = client.describe_file_systems()['FileSystems']
@@ -143,7 +143,7 @@ class FSxScratchDisk(ScratchDisk):
             # We just created a lock for this, so lock count must be == 1 if we are the only one starting it
             # The locks exist in case a batch of runs are started that are cofigured to use the same scratch mount path
 
-            log.debug(f"Using boto3 to create FSx scratch: in get_lockount == 1")
+            log.info(f"Using boto3 to create FSx scratch: in get_lockount == 1")
             
             try:
                 response = client.create_file_system(
@@ -162,7 +162,7 @@ class FSxScratchDisk(ScratchDisk):
                 self.filesystemid = response['FileSystem']['FileSystemId']
                 self.dnsname = response['FileSystem']['DNSName']
                 self.mountname = response['FileSystem']['LustreConfiguration']['MountName']
-                log.debug(f"filesystemid: {self.filesystemid}, dnsname: {self.dnsname}, mountname: {self.mountname}")
+                log.info(f"filesystemid: {self.filesystemid}, dnsname: {self.dnsname}, mountname: {self.mountname}")
 
             except ClientError as e:
                 log.exception('ClientError exception in create FSx mount' + str(e))
@@ -180,7 +180,7 @@ class FSxScratchDisk(ScratchDisk):
             log.info("FSx drive creation in progress...")
 
             # TODO: wait for scratch to become available here instead of in __mount
-            log.debug(f"Attempting to mount scratch ...")
+            log.info(f"Attempting to mount scratch ...")
             # Now mount it
             self.__mount()
         return
@@ -224,14 +224,14 @@ class FSxScratchDisk(ScratchDisk):
                     log.info("Attempting to mount it locally...")
 
 
-                    log.debug(f"sudo mount -t lustre -o noatime,flock {self.dnsname}@tcp:/{self.mountname} self.mountpath  ")
+                    log.info(f"sudo mount -t lustre -o noatime,flock {self.dnsname}@tcp:/{self.mountname} self.mountpath  ")
                     # Note: Need to allow sudo mount for all users
                     result = subprocess.run(['sudo', 'mount', '-t', 'lustre', '-o', 'noatime,flock', 
                                             f'{self.dnsname}@tcp:/{self.mountname}', self.mountpath ],
                                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
                     if result.returncode != 0:
-                        log.debug(result.stdout)
+                        log.info(result.stdout)
                         log.exception('error attempting to mount scratch disk ...')
                         raise Exception()
                     else:
@@ -256,8 +256,8 @@ class FSxScratchDisk(ScratchDisk):
     def delete(self):
         """ Delete this FSx disk """
 
-        log.debug(f'Attempting to delete FSx disk at {self.mountpath}')
-        log.debug(f'This processes lockid: {self.lockid}')
+        log.info(f'Attempting to delete FSx disk at {self.mountpath}')
+        log.info(f'This processes lockid: {self.lockid}')
 
         # Remove the lock for this incantation
         ScratchDiskModule.removelock(self.mountpath, self.lockid)
