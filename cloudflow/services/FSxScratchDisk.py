@@ -147,6 +147,7 @@ class FSxScratchDisk(ScratchDisk):
             
             try:
                 response = client.create_file_system(
+                    FileSystemTypeVersion='2.15',
                     FileSystemType='LUSTRE',
                     StorageCapacity=self.capacity,
                     SubnetIds=[ self.subnet_id ],
