@@ -229,7 +229,7 @@ def ptmp2efs(job: Job, cluster: Cluster):
     log.info(f"Copying {cluster.PTMP} FSX Lustre scratch directory output to {job.MODEL_DIR} model run directory")
 
     try:
-        cmd = f'rsync -ahP --ignore-existing {job.PTMP}/* {job.MODEL_DIR}/'
+        cmd = f"rsync -ahP --no-g --no-o --no-p --no-t --ignore-existing {cluster.PTMP.rstrip('/')}/ {job.MODEL_DIR.rstrip('/')}/"
         result = subprocess.run(cmd, universal_newlines=True, shell=True,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if result.returncode != 0:
