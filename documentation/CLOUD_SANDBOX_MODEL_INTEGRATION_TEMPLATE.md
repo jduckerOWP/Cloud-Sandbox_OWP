@@ -1,122 +1,116 @@
-1. Once you’ve logged into the head node of Cloud-Sandbox, go into the `/save/ec2-user` directory and create a new directory based on your affiliated organization. (Ex. `mkdir USER_AFFILIATION`). Go into the newly made directory for the next step.
+# Cloudflow Model Integration Template Guide
 
-2. Clone the latest Cloud-Sandbox code repository off the GitHub repository: 
-~~~bash
-git clone https://github.com/ioos/Cloud-Sandbox.git
-~~~
+This step-by-step developer guide walks through integrating a new ocean or coastal model into the **Cloudflow** workflow framework using `Model_Experiment_Template`.
 
-3. **Create a job file for your model.** 
-The keywords in this job file will inform the rest of the workflow.
-Change directory into 
-~~~bash
-Cloud-Sandbox/job.configs
-~~~ 
-Copy the `cloud_sandbox_experiment.template` file into a new file called `your_model_name.exp`. Inside that new file, you must specify at minimum the: 
-- MODEL (model name/class) 
-- JOBTYPE (model job type, be explicit on the workflow name for the given model class if it's seperate from the standard implementation class of 'experiment')
-- APP (model application, if its a simple job run, then use 'basic')
-- EXEC (executable) 
-- any executable dependencies as a new variable (such as an input file) 
-- MODEL_DIR (path to model directory on the Cloud-Sandbox) 
+> **Before You Begin:**
+> * **Head Node Access & Storage:** Ensure you can connect to your Sandbox head node via Okta Privileged Access ([Getting Started & Access](./GETTING_STARTED_AND_ACCESS.md)) and review filesystem layout rules in [Storage & Data Management](./STORAGE_AND_DATA_MANAGEMENT.md).
+> * **Architecture Overview:** Review [Model Porting & Workflow Development](./MODEL_PORTING_AND_WORKFLOW.md) and the [Cloudflow UML Diagram](../cloudflow/docs/UML_ModelWorkflows.png) to see how `Main_Driver`, `Flows`, `JobFactory`, and `[MODEL]_Experiment` classes interact.
 
-4. **Create an AWS cluster configuration file for your model.** 
-Change directory into 
-~~~bash
-Cloud-Sandbox/cluster.configs 
-~~~
-Create a new directory based on your affiliated organization. (Ex. `mkdir USER_AFFILIATION`). Copy `template.ioos` into a new file called `your_model_name.config` to specify the AWS cloud resource configuration you would like your model to run on. Move the new file `your_model_name.config` in your user affiliation directory. In that file you can edit the following variables: 
-- nodeType (Eligible AWS node instances are listed within the `cloudflow/cluster/AWSCluster.py` Python script under variable `awsTypes` with the associated CPU core count) 
-- nodeCount (Number of nodes you want to utilize of the given AWS node instance. A word of caution as the Cloud-Sandbox AWS account does have caps on the number of nodes you can allocate for a given instance)
-- tags (The Values for “Name” and “Project” should reflect your model name and affiliation).
-- image_id (The specific head node image that your user group is currently on. Defaults currently point to the NOS Sandbox image, if unsure what this specification should be then contact the Sandbox help desk: sandbox.helpdesk@noaa.gov).
+---
 
-5. **Build the workflow for your model - `workflow_main.py`**
-Change directory into 
-~~~bash
-Cloud-Sandbox/cloudflow/workflows
-~~~ 
+1. **Log into the head node and create your working directory**
+   Once you’ve logged into the head node of Cloud-Sandbox (see [Getting Started & Access](./GETTING_STARTED_AND_ACCESS.md)), navigate to `/save/$USER` (or `/save/ec2-user` if using a shared group account—see [Storage & Data Management](./STORAGE_AND_DATA_MANAGEMENT.md)) and create a new directory based on your affiliated organization (e.g., `mkdir USER_AFFILIATION`) if you're using a shared group account. Change into that newly created directory or your own personal directory `/save/$USER` for the next step.
 
-Edit the `workflow_main.py` script. 
-   - If you need to execute a specific Python environment pathway compatible with the cloudflow code base, then you will need to replace the `-S python3 -u` syntax in the very first line with the Python environment pathway. For example, the first line will end up looking like `#/usr/bin/env /pathway/to/cloudflow_environment/python`. Cloudflow environment Python installation instructions are already available within the `Cloud-Sandbox/LOCAL_PYTHON_MINIFORGE3_INSTALLATION_CLOUD_SANDBOX_INSTRUCTIONS.md` file for Sandbox users. This is necessary assuming your head node does not already have a precompiled Python envirionment with the required dependencies to execute cloudflow.
+2. **Clone the latest Cloud-Sandbox repository from GitHub:**
+   ```bash
+   git clone [https://github.com/ioos/Cloud-Sandbox.git](https://github.com/ioos/Cloud-Sandbox.git)
+   ```
+3. **Create a job file for your model**
+   The keywords in this job file will inform the rest of the workflow.
+   Change directory into:
+   ```bash
+   cd Cloud-Sandbox/job.configs
+   ```
+Copy `cloud_sandbox_experiment.template` into a new file called `your_model_name.exp`. Inside that new file, specify at minimum:
+   - `MODEL`: Model name/class
+   - `JOBTYPE`: Model job type (be explicit on the workflow name for the given model class if it is separate from the standard implementation class of `'experiment'`)
+   - `APP`: Model application (for a simple job run, use `'basic'`)
+   - `EXEC`: Path to the compiled model executable
+   - Any executable dependencies as new key-value variables (such as an input file)
+   - `MODEL_DIR`: Path to the model run directory on the Cloud-Sandbox
 
-6. **Build the workflow for your model - `your_model_name.py`** 
-We will create a file to read in the keywords from your job file by creating a new script and class for your model.
-Change directory into 
-~~~bash
-Cloud-Sandbox/cloudflow/job
-~~~ 	
-Within that directory, you will want to copy the file called `Model_Experiment_Template.py` to `your_model_name_Experiment.py`. Within the `your_model_name_Experiment.py` file, you will see that the original configuration of this file is reflected strictly based on the `cloud_sandbox_experiment.template` job file you’ve copied and modified in Step #3. 
-- Rename the “Model_Experiment_Template” Python class name to “your_model_name_Experiment” so this can now reflect a unique Python class for your own specific model with the basic approach for model execution. 
-- If your model execution only needs to know essentially the location of the model run directory and then executable itself, then you don’t need to modify anything else in this file. 
-- If your model executable needs more information (e.g, model argument, specific model libraries to be linked) that you’ve included `your_model_name.exp` file in Step #3, then you will need to include that information within the `parseConfig` function inside your new Python class.
-   - e.g., if you added the variable `"IN_FILE" : "path/to/inputfile"` in your `your_model_name.exp` job file, then you will need to add `self.IN_FILE = cfDict['IN_FILE']` in under the `parseConfig` function. 
-   - If you want to add more optional arguments for your model experiement workflow besides its standard model execution that's defined in your `your_model_name.exp` job file, then you will also need to add `self.OPTIONAL_ARGUMENT_NAME = cfDict.get('OPTIONAL_ARGUMENT_NAME', "DEFAULT_VALUE")` in under the `parseConfig` function. 
+4. **Create an AWS cluster configuration file for your model**
+   Change directory into:
+   ```bash
+   cd Cloud-Sandbox/cluster.configs
+   ```
+Copy `template.ioos` into a new file called `your_model_name.config` inside your affiliation directory to specify the AWS cloud resource configuration. Edit the following variables (see also [Cluster Configuration & Cost Tagging](./MODEL_PORTING_AND_WORKFLOW.md#5-creating-job--cluster-configuration-files)):
+   - `nodeType`: Eligible AWS EC2 node instances are listed in `cloudflow/cluster/AWSCluster.py` under `aws_types` and summarized with core counts (`PPN`), RAM, and EFA specs in [Supported AWS EC2 Compute Instance Types](./GLOSSARY_AND_BEST_PRACTICES.md#2-supported-aws-ec2-compute-instance-types).
+   - `nodeCount`: Number of nodes to allocate for the specified AWS instance type. *(Caution: The Cloud-Sandbox AWS account enforces quotas per instance family; benchmark scaling across 1, 2, and 4 nodes first.)*
+   - `tags`: Set the `"Name"` and `"Project"` values to reflect your model name and affiliation so administrators can track active runs.
+   - `image_id`: The specific compute node AMI matching your head node environment. Defaults point to the NOS Sandbox image; if unsure, contact `sandbox.helpdesk@noaa.gov`.
 
-7. **Build the workflow for your model - `JobFactory.py`**	
-Edit `JobFactory.py` file and at the very top of the script, you will now add a new import statement to reflect the new “your_model_Experiment” Python class you’ve constructed from the `your_model_name_Experiment.py` file you created in Step #6 
-~~~python
-from cloudflow.job.your_model_name_Experiment import your_model_name_Experiment
-~~~
-Inside `class JobFactory`, edit the `job` function 
-- Insert an `if/elif` statement that reflects your respective `MODEL` class and `jobtype` class variable defined in your `your_model_name.exp` file constructed in Step #3 
-- Call the new Python class you created in Step #6 and imported here
-  - `newjob = your_model_name(configfile, NPROCS)`
+5. **Build the workflow for your model — `workflow_main.py`**
+   Change directory into:
+   ```bash
+   cd Cloud-Sandbox/cloudflow/workflows
+   ```
+Inspect `workflow_main.py`.
+   - If your head node does not have a pre-configured Cloudflow Conda/Miniforge environment and you need to point to a custom Python path, replace `-S python3 -u` in the first line with your Python executable path (e.g., `#!/usr/bin/env /pathway/to/cloudflow_environment/python`).
+   - Follow [Local Python Miniforge3 Installation Instructions](./LOCAL_PYTHON_MINIFORGE3_INSTALLATION_CLOUD_SANDBOX_INSTRUCTIONS.md) if you need to install a compatible Python/Prefect environment on the head node (see also [Prefect v3 Overview](./PREFECTv3.md)).
 
-8. **Build the workflow for your model - `tasks.py`**	
-If your model executable does not need more information than the template job file (just the pathway to the model run directory and the executable in `your_model_name.basic` job file in Step #3) then skip this step and move to the next one. If you added variables to your job file, read this step.
+6. **Build the workflow for your model — `your_model_name_Experiment.py`**
+   Create a new Job subclass to parse the keywords from your `.exp` job file (refer to the `[MODEL]_Experiment` hierarchy in the [Cloudflow UML Diagram](../cloudflow/docs/UML_ModelWorkflows.png) and [Implementing a Model Job Class](./MODEL_PORTING_AND_WORKFLOW.md#3-implementing-a-model-job-class)).
+   Change directory into:
+   ```bash
+   cd Cloud-Sandbox/cloudflow/job
+   ```
+Copy `Model_Experiment_Template.py` to `your_model_name_Experiment.py`. Its default structure mirrors `cloud_sandbox_experiment.template` from Step #3:
+   - Rename the `Model_Experiment_Template` Python class to `your_model_name_Experiment`.
+   - If your model execution only needs `MODEL_DIR` and `EXEC`, no further changes are required in this file.
+   - If your model executable requires extra parameters defined in `your_model_name.exp` in Step #3, parse them inside `parseConfig`:
+     - Required variable example (`"IN_FILE": "path/to/inputfile"`): add `self.IN_FILE = cfDict['IN_FILE']` inside `parseConfig`.
+     - Optional argument example: add `self.OPTIONAL_ARGUMENT_NAME = cfDict.get('OPTIONAL_ARGUMENT_NAME', "DEFAULT_VALUE")` inside `parseConfig`.
 
-Change directory into 
-~~~bash
-Cloud-Sandbox/cloudflow/workflows
-~~~ 	
-Edit `tasks.py`
-- Edit the `template_run` function 
-  - Inside that function, add an `elif` statement within the code block to include the extra arguments for your model from your job file `your_model_name.exp` created in Step #3 to include in the launcher script that you will modify in Step #9. 
-  - Add the new variable(s) you created in your job file to the `result` command. 
-    - e.g., if you added the variable `"IN_FILE" : "path/to/inputfile"` in your `your_model_name.exp` job file, 
-      - define the variable `IN_FILE = job.IN_FILE` and add `str(IN_FILE)` in the `subprocess.run` command within the square brackets. 
-    - Make sure you put the new variables at the end of the other strings in the square brackets. 
-  - Copy and modify the code logic like in the `schism`, `dflowfm`, or `ucla-roms` code blocks for each model class, then add the jobtype of your specific model class.
-  
+7. **Register your class in `JobFactory.py`**
+   Edit `cloudflow/job/JobFactory.py` and add an import statement at the top of the file for the class created in Step #6:
+   ```python
+   from cloudflow.job.your_model_name_Experiment import your_model_name_Experiment
+   ```
+Inside `class JobFactory`, update the `job()` factory method:
+   - Add an `if/elif` branch matching the `MODEL` and `JOBTYPE` values defined in `your_model_name.exp` in Step #3.
+   - Instantiate your new class:
+     ```python
+     newjob = your_model_name_Experiment(configfile, NPROCS)
+     ```
 
-9. **Build the workflow for your model - `experiment_launcher.sh`**	
-This controls the launch of your model inside the Cloud-Sandbox.
-Change directory into 
-~~~bash
-Cloud-Sandbox/cloudflow/workflows
-~~~ 	
-Modify `experiment_launcher.sh` 
-- If you completed Step #8 due to model information required from the job file to kick start the executable, 
-  - make an `if` shell script block to ingest the special input argument(s) 
-    - You can simply follow along with the code blocks for `schism`, `dflowfm`, or `ucla-roms` for the `export` statements. 
-    - The `$7` in these `export` statements refer to the 7th string added in the `result = subprocess.run` command in `tasks.py`, which should be the new variable you added in Step #8. If you added more than one new variable, they would be `$8`, `$9`, and so on.
+8. **Pass custom job variables in `tasks.py` *(skip if no extra variables were added in Step #3)***
+   If your model only uses `MODEL_DIR` and `EXEC`, skip to Step #9. Otherwise, change directory into:
+   ```bash
+   cd Cloud-Sandbox/cloudflow/workflows
+   ```
+Edit `tasks.py` inside `template_run` (or the corresponding experiment task function):
+   - Add an `elif` block for your `MODEL` / `JOBTYPE` to extract the extra attributes from `job` (e.g., `IN_FILE = job.IN_FILE`) and append `str(IN_FILE)` to the end of the `subprocess.run([...])` argument list passed to `experiment_launcher.sh`.
+   - Use the existing `schism`, `dflowfm`, or `ucla-roms` blocks as reference templates.
 
-Next, go towards the bottom of the script where you see a set of if/elif blocks of code for specific model suites. 
-- Construct a code block for “your_model” that points to a shell launcher script and add the specific arguments required to run your model 
-- That launcher script for “your_model” will be constructed in the next step, where it takes specific arguments required to run your model. 
-  - The default requirements for each of the launcher scripts are the model run directory and the pathway to the model executable. If more is required for your given model to launch, then include those as well similar to the code logic you see in the other if/elif code blocks.
+9. **Update `experiment_launcher.sh`**
+   Change directory into:
+   ```bash
+   cd Cloud-Sandbox/cloudflow/workflows
+   ```
+Edit `experiment_launcher.sh`:
+   - If you completed Step #8, add an `if` block to ingest and `export` the positional argument(s) passed from `tasks.py` (`$7`, `$8`, etc., following the `schism`, `dflowfm`, or `ucla-roms` blocks).
+   - Near the bottom of `experiment_launcher.sh`, add an `if/elif` block for your model suite that invokes your model's run script (constructed in Step #10) with `MODEL_DIR`, `EXEC`, and any additional model-specific arguments.
 
-10. **Build the workflow for your model - `your_model_run.sh`**		
-Copy the `model_basic_run.sh` file to a new file called `your_model_run.sh`. Inside that file, you will see the general workflow template that you will need to modify: 
-(1) Load the required compilers and libraries used to compile your model 
-(2) Export any required environmental variables needed for the AWS cloud environment to run your given model executable and 
-(3) Call the method to run your model with the given executable (e.g., mpirun or mpiexec). 
+10. **Create your model launcher script — `your_model_run.sh`**
+    In `Cloud-Sandbox/cloudflow/workflows`, copy `model_basic_run.sh` to `your_model_run.sh` and customize it to:
+    1. Load the exact compiler and MPI Spack modules used to compile your model (`module load ...`; see [Environment Module Mismatches](./MODEL_PORTING_AND_WORKFLOW.md#environment-module-mismatches)).
+    2. Export any required runtime or EFA/MPI environment variables.
+    3. Execute the model binary with `mpirun` or `mpiexec`.
 
-11. Now, go back to `experiment_launcher.sh` and ensure that the if/elif code block you’ve constructed in Step #9 is matching the syntax of calling that specific shell script. Make sure to be explicit on your model code base workflow based on your `JOBTYPE` and `APP` options you've inserted within the `your_model_name.exp` in Step #3. Check that the code logic also includes the script arguments required to properly run the given model suite. 
-- You may need to add an `if` statement for `MPIOPTS` for your model depending on how your model is configured.
+11. **Verify `experiment_launcher.sh` arguments & `MPIOPTS`**
+    Return to `experiment_launcher.sh` and verify that the `if/elif` block from Step #9 matches the exact filename, positional arguments, `JOBTYPE`, and `APP` values defined in `your_model_name.exp`, including any model-specific `MPIOPTS` settings.
 
-12. **Run your model**
-Finally, we can now attempt to run the model! 
-Change directory into 
-~~~bash
-Cloud-Sandbox/cloudflow
-~~~ 	
-Make sure you are in the `cloudflow` directory before running any models. Follow the steps below to submit the Cloud-Sandbox job submission to the background of the head node and monitor your job progress:
-~~~bash
-./workflows/workflow_main.py ../cluster.configs/your_model_name.config ../job.configs/your_model_name.exp > your_model_test.out &
-~~~
-To see the progress of the Cloud-Sandbox execution of your model
-~~~bash
-tail -f your_model_test.out 
-~~~
+12. **Run and monitor your model**
+    Change directory into `Cloud-Sandbox/cloudflow` (you must launch workflows from inside the `cloudflow` directory) and submit the workflow in the background (see also [Cloudflow Model Execution Instructions](./CLOUDFLOW_MODEL_EXECUTION_INSTRUCTIONS.md)):
+    ```bash
+    cd Cloud-Sandbox/cloudflow
+    nohup ./workflows/workflow_main.py ../cluster.configs/USER_AFFILIATION/your_model_name.config ../job.configs/your_model_name.exp > your_model_test.out &
+    ```
+    Monitor progress in real time:
+    ```bash
+    tail -f your_model_test.out
+    ```
 
+    > **Troubleshooting & Safe Termination:** If a run hangs or fails, inspect the first error in `your_model_test.out` and `~/cluster_runtime.log`. **Never** press `Ctrl+C` or `kill` `workflow_main.py` directly—follow [How to Safely Stop a Hung Run](./MODEL_PORTING_AND_WORKFLOW.md#how-to-safely-stop-a-hung-run-preventing-zombie-nodes) and the [Zombie Job Checklist](./ZOMBIE_JOB_CHECKLIST.md) so EC2 compute nodes terminate cleanly.
+   
