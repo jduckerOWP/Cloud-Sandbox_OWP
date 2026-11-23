@@ -10,4 +10,4 @@ https://ioos.github.io/Cloud-Sandbox
 
 #### CloudFlow UML diagram for developers
 
-![UML Diagram](./cloudflow/docs/UML_ModelWorkflows.png "UML Diagram")
+![UML Diagram](../cloudflow/docs/UML_ModelWorkflows.png "UML Diagram")
