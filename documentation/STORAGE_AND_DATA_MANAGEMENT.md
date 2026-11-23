@@ -31,6 +31,9 @@ When logged into a Sandbox head node, store your code, forcing data, and tempora
 | **`/com/<user>`** | Amazon EFS | `cdc` | Shared directory for model forcing inputs and run outputs. Check existing shared forcing datasets (such as ERA5) before duplicating data, and name new datasets clearly. |
 | **`/ptmp`** | EFS or FSx Lustre | — | High-speed temporary scratch space for active model workflows. Copy completed outputs to `/com` or S3 when finished. |
 
+> **Important — Changes Outside Shared EFS Require Cluster AMI Re-Imaging:**  
+> Only shared EFS directories are mounted onto dynamically provisioned EC2 compute nodes. Any system-level modification on the head node outside EFS (such as installing RPM packages, editing `/etc`, or adding `~/.bashrc` environment variables required by compute nodes) will **not** exist on worker nodes and will cause unexpected Cloudflow job failures until the Sandbox Help Desk (`sandbox.helpdesk@noaa.gov`) re-images the head node and you update `image_id` in your `.config` file. See [Head Node vs. Compute Node AMI Drift](./MODEL_PORTING_AND_WORKFLOW.md#head-node-vs-compute-node-ami-drift-re-imaging-required) for details.
+
 ---
 
 ## 2. EFS Lifecycle Management & Storage Costs
