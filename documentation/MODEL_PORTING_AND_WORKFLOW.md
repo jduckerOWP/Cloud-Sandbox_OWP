@@ -194,6 +194,15 @@ ERROR: Unable to locate a modulefile for 'intel-oneapi-compilers/2023.1.0-gcc-11
 
 Run `module avail` on the head node to inspect currently installed Spack module versions.
 
+### Head Node vs. Compute Node AMI Drift (Re-Imaging Required)
+Compute worker nodes are spun up from a static AWS Machine Image (`image_id` in your `cluster.configs/*.config` file), whereas only shared EFS directories (such as `/save`, `/com`, and `/nos`—see [Storage & Data Management](./STORAGE_AND_DATA_MANAGEMENT.md)) are mounted across both the head node and worker nodes.
+
+- **When a Cluster AMI Rebuild Is Required:** If you run a Cloudflow job and encounter unexpected runtime errors after modifying the head node **outside** of shared EFS storage—such as installing or updating system RPM packages, modifying `/etc`, or changing local user configuration files (e.g., `~/.bashrc`) that worker nodes depend on during MPI execution—the worker nodes will not see those changes. You must request a cluster AMI rebuild:
+  1. Contact the Sandbox Help Desk (`sandbox.helpdesk@noaa.gov`), as re-imaging requires elevated AWS administrator privileges.
+  2. Coordinate a brief shutdown of the head node so it can be re-imaged into a new compute node AMI.
+  3. Update the `image_id` field in your `cluster.configs/*.config` file to reference the new AMI ID.
+- **When Re-Imaging Is *Not* Required:** Changes contained entirely within shared EFS volumes (e.g., `/save/$USER`), or head-node-only `~/.bashrc` customizations (such as shell aliases or prompt settings) that compute worker nodes do not rely on during job execution, do not require an AMI rebuild.
+- 
 ### Reading Logs & Inspecting Worker Nodes
 * **Find the First Error:** Check your Cloudflow log (`./workflow_main.py >& run.log &`), `~/cluster_runtime.log`, and the model's native log in `/com` or `/ptmp` (e.g., `cbofs.t00z.<date>.forecast.log`, `mirror.out`, or `lofcst.log`). The root cause is almost always the **first** error in the log rather than the final traceback.
 * **SSH into a Running Worker Node:** Private worker IPs are printed in the workflow log (`"host": "10.0.0.177"`). You can SSH directly from the head node (`ssh 10.0.0.177`) to inspect CPU/I/O progress if a model appears hung.
