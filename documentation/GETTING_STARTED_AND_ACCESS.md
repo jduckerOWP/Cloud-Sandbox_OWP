@@ -11,8 +11,8 @@ This guide covers account onboarding, multi-factor authentication setup, web acc
 
 Before logging into the Sandbox for the first time, complete the following onboarding steps:
 
-1. **Request a Project & Account:** Email **sandbox.helpdesk@noaa.gov** and submit the **Sandbox Google Project Request Form**. The outreach team will follow up to discuss your project requirements and provision your accounts.
-2. **Track Onboarding Status:** Monitor the status of your user account and head node provisioning on the **NOS Sandbox User Onboarding Status Dashboard**.
+1. **Request a Project & Account:** Email **sandbox.helpdesk@noaa.gov** and submit the [**Sandbox Google Project Request Form**](https://docs.google.com/forms/d/e/1FAIpQLSdZl1KUguRw5uPFFBuunLSXmX2a9Qeggp3dtF6OGBuvISL1PQ/viewform?usp=sharing&ouid=109662180604206654495). The outreach team will follow up to discuss your project requirements and provision your accounts.
+2. **Track Onboarding Status:** Monitor the status of your user account and head node provisioning on the [**NOS Sandbox User Onboarding Status Dashboard**](https://datastudio.google.com/reporting/7dc4820c-fcab-49e5-a072-235e5d97754a).
 3. **Network & IP Allowlisting (External / Non-NOAA Users):** To reach the Nebari portal (`https://coastalsandbox.nos.noaa.gov`), you must connect from a NOAA network, the NOAA VPN, or an allowlisted IP address. If you are an external partner, email your public IP address (or organizational network CIDR range from your IT administrator) to **sandbox.helpdesk@noaa.gov**.
 
 ---
@@ -196,7 +196,7 @@ The Sandbox environment provides built-in shell aliases to quickly navigate betw
 
 * **Working in Nebari:** Proceed to the **[Nebari User Guide](./NEBARI_USER_GUIDE.md)** to select an instance type, configure Conda Store environments, or use GPUs.
 * **Understanding Storage & Data Transfers:** Review **[Storage & Data Management](./STORAGE_AND_DATA_MANAGEMENT.md)** before staging large datasets or model outputs.
-* **Running Models:** Follow the **[Cloudflow Model Execution Instructions](./CLOUDFLOW_MODEL_EXECUTION_INSTRUCTIONS.md)** or **[Model Porting & Workflow Architecture](./MODEL_PORTING_AND_WORKFLOW.md)** to launch an on-demand compute cluster.
+* **Running Models:** Follow the **[Cloudflow Model Execution Instructions](./CLOUDFLOW_MODEL_EXECUTION_INSTRUCTIONS.md)** or **[Model Porting & Workflow Architecture](./MODEL_PORTING_AND_WORKFLOW.md)** for a deep dive into the Cloud-Sandbox workflow
 
 
 
